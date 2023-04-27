@@ -62,4 +62,6 @@ dependencies {
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+    implementation "io.ktor:ktor-client-okhttp:1.6.5"
+    implementation "io.ktor:ktor-client-core:1.6.5"
 }
