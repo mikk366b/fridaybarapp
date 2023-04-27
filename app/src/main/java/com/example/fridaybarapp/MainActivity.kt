@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.*
+import com.example.fridaybarapp.firestore.service.FireStore
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -21,6 +22,10 @@ import io.ktor.client.request.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import io.ktor.http.cio.*
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
@@ -35,6 +40,13 @@ import kotlin.math.log
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val authen = Firebase.auth
+        FirebaseApp.initializeApp(this)
+        val databasee = FirebaseFirestore.getInstance()
+        val service = FireStore(databasee,authen)
+        // Mail: fridaybarapp@app.dk
+        // Password: 123456
+        authen.currentUser
         setContent {
             FridaybarappTheme {
                 // A surface container using the 'background' color from the theme
