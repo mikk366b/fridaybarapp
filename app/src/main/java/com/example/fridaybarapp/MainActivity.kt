@@ -24,16 +24,25 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.example.fridaybarapp.firestore.service.FireStore
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import io.ktor.http.cio.*
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -63,8 +72,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String) {
     Text(text = "Hello $name! Hej Igen")
-    }
-
+}
 
 
 @Composable
@@ -73,101 +81,6 @@ fun DefaultPreview() {
         Greeting("Android")
     }
 }
-
-@Composable
-fun LoginScreen() {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        TextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        )
-
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
-        Button(
-            onClick = { /* TODO: Implement login */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Log in")
-        }
-    }
-}
-
-
-
-
-
-
-@Composable
-fun PubCrawlScreen() {
-    val fridayBars = listOf(
-        FridayBar("Bar 1", LatLng(55.6761, 12.5683)),
-        FridayBar("Bar 2", LatLng(55.6762, 12.5684)),
-        FridayBar("Bar 3", LatLng(55.6763, 12.5685))
-    )
-
-    val selectedBars = remember { mutableStateListOf<FridayBar>() }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        items(fridayBars) { fridayBar ->
-            val isChecked = selectedBars.contains(fridayBar)
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = isChecked,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            selectedBars.add(fridayBar)
-                        } else {
-                            selectedBars.remove(fridayBar)
-                        }
-                    }
-                )
-
-                Text(
-                    text = fridayBar.name,
-                    fontSize = 20.sp,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-        }
-    }
-
-    Button(
-        onClick = { /* TODO: Start pub crawl */ },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text("Start Pub Crawl")
-    }
-}
-
 fun makeNetworkRequesttest(): String? {
     val client = OkHttpClient()
     val request = Request.Builder()
