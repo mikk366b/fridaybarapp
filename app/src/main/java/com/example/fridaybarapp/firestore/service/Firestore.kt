@@ -67,15 +67,15 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-                        Log.d(TAG, "createUserWithEmail:success")
+                        Log.d(TAG, "LoginUserWithEmail:success")
                         val user = auth.currentUser ?: throw Exception("Something wrong")
                         val signedInUser = user.email?.let { User(user.providerId, it) }
-                            ?: throw Exception("createUserWithEmail:$email failure")
+                            ?: throw Exception("LoginUserWithEmail:$email failure")
                         continuation.resume(signedInUser)
                     } else {
                         // If sign in fails, display a message to the user.
-                        Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                        throw throw Exception("createUserWithEmail: $email failure", task.exception)
+                        Log.w(TAG, "LoginUserWithEmail:failure", task.exception)
+                        throw throw Exception("LoginUserWithEmail: $email failure", task.exception)
                     }
                 }
         }

@@ -24,6 +24,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.fridaybarapp.components.authentication.Login
+import com.example.fridaybarapp.components.authentication.Signup
 import com.example.fridaybarapp.firestore.service.FireStore
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import io.ktor.client.*
@@ -58,11 +63,20 @@ import kotlinx.coroutines.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val auth = Firebase.auth
+        FirebaseApp.initializeApp(this);
+        val db = FirebaseFirestore.getInstance()
+        val service = FireStore(db, auth)
         setContent {
             FridaybarappTheme {
+                val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    MapScreen(onBackClicked = { onBackPressedDispatcher.onBackPressed() })
+                    //MapScreen(onBackClicked = { onBackPressedDispatcher.onBackPressed() })
+                    NavHost(navController = navController, startDestination = "Signup") {
+                        composable("Signup") { Signup(service, nav = navController) }
+                        composable("Login") { Login(service, nav = navController) }
+                    }
                 }
             }
         }

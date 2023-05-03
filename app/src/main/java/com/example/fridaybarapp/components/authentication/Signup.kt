@@ -29,8 +29,8 @@ fun Signup(service:FireStore,nav: NavController) {
         Row() {
             Text("Password:")
             TextField(
-                value = email.value,
-                onValueChange = { newText -> email.value = newText },
+                value = password.value,
+                onValueChange = { newText -> password.value = newText },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
         }
