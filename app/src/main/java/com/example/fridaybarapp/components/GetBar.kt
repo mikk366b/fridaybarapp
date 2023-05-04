@@ -4,6 +4,7 @@ package com.example.fridaybarapp.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.Button
+import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,26 +16,28 @@ import com.example.fridaybarapp.firestore.service.Bar
 
 @Composable
 fun Bars(service: FireStore, nav: NavController) {
-    val horses = remember { mutableStateOf(emptyList<Bar>()) }
+    val bars = remember { mutableStateOf(emptyList<Bar>()) }
     LaunchedEffect(Unit) {
         val list = service.getFarvoritesbars()
-        horses.value = list
+        bars.value = list
     }
-    Column() {
-        horses.value.map {
-            Column() {
-                Row() {
-                    Text("Id: ")
-                    Text(it.id)
-                }
-                Row() {
-                    Text("Name: ")
-                    Text(it.name)
+    Card() {
+        Column() {
+            bars.value.map {
+                Column() {
+                    Row() {
+                        Text("Id: ")
+                        Text(it.id)
+                    }
+                    Row() {
+                        Text("Name: ")
+                        Text(it.name)
+                    }
                 }
             }
-        }
-        Button(onClick = { nav.navigate("CreateBar") }) {
-            Text("Create Horse")
+            Button(onClick = { nav.navigate("CreateBar") }) {
+                Text("Create Horse")
+            }
         }
     }
 }

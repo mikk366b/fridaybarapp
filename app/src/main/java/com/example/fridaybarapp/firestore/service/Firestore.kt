@@ -13,14 +13,16 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
         const val TAG = "FIRE_STORE_SERVICE"
     }
 
+    //Not tested
     suspend fun getFarvoritesbars(): List<Bar> {
         return suspendCoroutine { continuation ->
-            api.collection("Favorites")
+            api.collection("users").document("user.id")
                 .get()
                 .addOnSuccessListener {
-                    val favlists =
-                        it.documents.map { d -> Bar(d.id, d.data?.get("Name").toString()) }
-                    continuation.resume(favlists)
+                    val favlists = it.get("Favorites") as Array<Bar>
+                        //it.documents.map { d -> Bar(d.id, d.data?.get("Name").toString()) }
+                    //val favlists = favarray?.toList()
+                    continuation.resume(favlists.toList())
                 }.addOnFailureListener {
                     Log.v(TAG, "We failed $it")
                     throw it
@@ -53,6 +55,11 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         val user = auth.currentUser ?: throw Exception("Something wrong")
                         val signedInUser = user.email?.let { User(user.providerId, it) }
                             ?: throw Exception("createUserWithEmail:$email failure")
+                        val field = Fields(
+                            listOf("")
+                        )
+
+                        //api.collection("users").document(user.providerId).set(field)
                         continuation.resume(signedInUser)
                     } else {
                         // If sign in fails, display a message to the user.
