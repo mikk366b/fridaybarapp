@@ -23,6 +23,8 @@ import com.google.android.libraries.maps.MapView
 import com.google.android.libraries.maps.SupportMapFragment
 import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
+import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
 import com.google.maps.android.ktx.awaitMap
@@ -30,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 
 @Composable
 fun rememberMapViewWithLifecycle(): MapView {
@@ -73,6 +76,10 @@ fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun MapScreen(onBackClicked: () -> Unit) {
+    val context = LocalContext.current
+    val geocodehelper = GeocodeHelper(apiKey = "AIzaSyCQoksz4IDUyavwb4TU3U5JdpPMyXbzPSE",
+        context = context
+    )
     Scaffold(
         topBar = {
             TopAppBar(
@@ -90,103 +97,39 @@ fun MapScreen(onBackClicked: () -> Unit) {
             )
         },
         content = {
-            val mapRef = rememberMapViewWithLifecycle()
             val mapView = rememberMapViewWithLifecycle()
-            val fridayBars = listOf(
-                FridayBar("Bar 1", LatLng(55.6761, 12.5683)),
-                FridayBar("Bar 2", LatLng(55.6762, 12.5684)),
-                FridayBar("Bar 3", LatLng(55.6763, 12.5685)),
-                FridayBar("Bar 4", LatLng(56.6763, 13.5685))
-            )
-            val context = LocalContext.current
             AndroidView({mapView}) {mapView->
                 CoroutineScope(Dispatchers.Main).launch {
                     val map = mapView.awaitMap()
                     map.uiSettings.isZoomControlsEnabled = true
-                    val placeName = "approksimerbar"
 
-                    val geocodehelper = GeocodeHelper(apiKey = "AIzaSyCQoksz4IDUyavwb4TU3U5JdpPMyXbzPSE",
-                        context = context
-                    )
-                    val location = geocodehelper.geocode(placeName)
-                    if (location != null) {
-                        geocodehelper.addMarker(map, location, placeName)
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 14f))
+                    val JSONbars = makeNetworkRequestJSON()
+                    val bars = JSONbars
+
+                    if (bars != null) {
+                        for (i in 0 until bars.length()) {
+                            val bar = bars.getJSONObject(i)
+                            val name = bar.getString("name")
+                            val address = bar.getString("address")
+                            val location = geocodehelper.geocode(address)
+                            if (location!=null) {
+                                val latLng = location
+                                geocodehelper.addMarker(map, latLng, name)
+                                if (i == 1){
+                                map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))}
+                            }
+
+                        }
+
                     }
 
-                    val pickUp =  LatLng(-35.016, 143.321)
-                    val destination = LatLng(-32.491, 147.309)
-                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(55.6763, 12.5685),6f))
-
-
-                    fridayBars.forEach { fridayBar ->
-                        val fridayBarMarkerOptions = MarkerOptions()
-                            .position(fridayBar.location)
-                            .title(fridayBar.name)
-
-                        map.addMarker(fridayBarMarkerOptions)}
 
                 }
             }
         }
     )
 }
-class MapActivity : AppCompatActivity() {
 
-    private lateinit var mapFragment: SupportMapFragment
-    private lateinit var map: GoogleMap
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.layout_map)
-
-        mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync { googleMap ->
-            map = googleMap
-            map.uiSettings.isZoomControlsEnabled = true
-
-
-            val fridayBars = listOf(
-                FridayBar("Bar 1", LatLng(55.6761, 12.5683)),
-                FridayBar("Bar 2", LatLng(55.6762, 12.5684)),
-                FridayBar("Bar 3", LatLng(55.6763, 12.5685)),
-                FridayBar("Bar 4", LatLng(56.6763, 13.5685))
-            )
-
-            val pickUp = LatLng(-35.016, 143.321)
-            val destination = LatLng(-32.491, 147.309)
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(55.6763, 12.5685), 6f))
-
-            fridayBars.forEach { fridayBar ->
-                val fridayBarMarkerOptions = MarkerOptions()
-                    .position(fridayBar.location)
-                    .title(fridayBar.name)
-
-                map.addMarker(fridayBarMarkerOptions)
-            }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapFragment.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapFragment.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapFragment.onDestroy()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapFragment.onLowMemory()
-    }
-}
 private fun getCurrentLocation(): Location {
 // TODO: Implement getting current location
     return Location("")

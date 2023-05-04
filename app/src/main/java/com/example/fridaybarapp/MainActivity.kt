@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     MapScreen(onBackClicked = { onBackPressedDispatcher.onBackPressed() })
+                    //NetworkResponseUI()
                 }
             }
         }
@@ -113,7 +114,7 @@ fun NetworkResponseUI() {
 
         // Update the state variable with the response
         if (result != null) {
-            response = result as String
+            response = createListFromNetworkResponse(result.toString())
         }
     }
 
@@ -125,9 +126,5 @@ fun NetworkResponseUI() {
         //Text(text = response)
         Log.v("JSON response før",response)
         Text(text = response)
-
-
-
-
     }
 }
