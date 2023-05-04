@@ -13,14 +13,14 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
         const val TAG = "FIRE_STORE_SERVICE"
     }
 
-    suspend fun getBarlist(): List<Barlist> {
+    suspend fun getFarvoritesbars(): List<Bar> {
         return suspendCoroutine { continuation ->
-            api.collection("Horses")
+            api.collection("Favorites")
                 .get()
                 .addOnSuccessListener {
-                    val barlists =
-                        it.documents.map { d -> Barlist(d.id, d.data?.get("Name").toString()) }
-                    continuation.resume(barlists)
+                    val favlists =
+                        it.documents.map { d -> Bar(d.id, d.data?.get("Name").toString()) }
+                    continuation.resume(favlists)
                 }.addOnFailureListener {
                     Log.v(TAG, "We failed $it")
                     throw it
@@ -28,11 +28,11 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
         }
     }
 
-    suspend fun createBarList(name: String) {
-        val horse = hashMapOf("Name" to name)
+    suspend fun createFarvoritesbars(name: String) {
+        val fridaybarToFav = hashMapOf("Name" to name)
         suspendCoroutine { continuation ->
-            api.collection("Horses")
-                .add(horse)
+            api.collection("Favorites")
+                .add(fridaybarToFav)
                 .addOnSuccessListener { documentReference ->
                     Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
                     continuation.resume(documentReference.id)

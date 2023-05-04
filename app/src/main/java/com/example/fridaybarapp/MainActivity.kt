@@ -27,6 +27,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.fridaybarapp.components.Bars
+import com.example.fridaybarapp.components.CreateFavBar
 import com.example.fridaybarapp.components.authentication.Login
 import com.example.fridaybarapp.components.authentication.Signup
 import com.example.fridaybarapp.firestore.service.FireStore
@@ -73,9 +75,11 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     //MapScreen(onBackClicked = { onBackPressedDispatcher.onBackPressed() })
-                    NavHost(navController = navController, startDestination = "Signup") {
+                    NavHost(navController = navController, startDestination = "CreateBarlist") {
                         composable("Signup") { Signup(service, nav = navController) }
                         composable("Login") { Login(service, nav = navController) }
+                        composable("CreateBar") { CreateFavBar(service, nav = navController) }
+                        composable("GetBar") { Bars(service, nav = navController) }
                     }
                 }
             }
