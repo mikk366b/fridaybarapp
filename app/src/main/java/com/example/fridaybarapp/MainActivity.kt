@@ -123,9 +123,17 @@ fun Bars(response: String) {
             contentDescription = null,
             alignment = Alignment.Center
         )
-        Row(Modifier.fillMaxWidth().height(2.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(Color(0xFFCAA800))){
         }
-        Row(Modifier.height(35.dp).fillMaxWidth().background(Color(0xFFB90000))) {
+        Row(
+            Modifier
+                .height(35.dp)
+                .fillMaxWidth()
+                .background(Color(0xFFB90000))) {
             Text(text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
                 style = TextStyle(color = Color(0xFFFFF0D2),
                     fontSize = 25.sp,
@@ -133,7 +141,11 @@ fun Bars(response: String) {
                     shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f)
                 ))
         }
-        Row(Modifier.fillMaxWidth().height(2.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(2.dp)
+                .background(Color(0xFFCAA800))){
         }
 
         //Text(text = response)
@@ -141,7 +153,12 @@ fun Bars(response: String) {
         val parts = response.lines()
         for (i in 0..8) {
             Spacer(modifier = Modifier.height(12.dp))
-            Card(Modifier.height(80.dp).width(390.dp).offset(x = 10.dp).clickable { viewDetails = !viewDetails },
+            Card(
+                Modifier
+                    .height(80.dp)
+                    .width(390.dp)
+                    .offset(x = 10.dp)
+                    .clickable { viewDetails = !viewDetails },
                 shape = RoundedCornerShape(20),
                 backgroundColor = Color(0xFF000000),
                 border = BorderStroke(2.dp, color = Color(0xFFA36D00))) {
@@ -223,9 +240,17 @@ fun NetworkResponseUI() {
 
     // Display the response in a Text composable
     Column {
-        Row(Modifier.fillMaxWidth().height(15.dp).background(Color(0xFF014C2D))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(15.dp)
+                .background(Color(0xFF014C2D))){
         }
-        Row(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Color(0xFFCAA800))){
         }
         Row(
             Modifier
@@ -265,11 +290,18 @@ fun NetworkResponseUI() {
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Color(0xFFCAA800))){
         }
         Column(Modifier.offset(y = 0.dp)) {
             if (mSelectedText == mScreens[1]) {
                 Bars(response)
+            }
+            if (mSelectedText == mScreens[2]){
+                MapScreen()
             }
         }
 

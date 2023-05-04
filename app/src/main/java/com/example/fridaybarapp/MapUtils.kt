@@ -75,27 +75,14 @@ fun rememberMapLifecycleObserver(mapView: MapView): LifecycleEventObserver =
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun MapScreen(onBackClicked: () -> Unit) {
+//onBackClicked: () -> Unit
+fun MapScreen() {
     val context = LocalContext.current
     val geocodehelper = GeocodeHelper(apiKey = "AIzaSyCQoksz4IDUyavwb4TU3U5JdpPMyXbzPSE",
         context = context
     )
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Map Screen") },
-                navigationIcon = {
-                    val context = LocalContext.current
-                    Button(onClick = { val intent = Intent(context, MainActivity::class.java)
-                        ContextCompat.startActivity(context, intent, null)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"                        )
-                    }
-                }
-            )
-        },
+
         content = {
             val mapView = rememberMapViewWithLifecycle()
             AndroidView({mapView}) {mapView->
