@@ -19,3 +19,14 @@ fun makeNetworkRequest(): String? {
         return "didnt work"
     }
 }
+
+class BarInfo(_name: String, _address: String, _page: String){
+    var name: String = _name;
+    var address: String = _address;
+    var page: String = _page;
+}
+
+fun createListFromNetworkResponse(response: String): List<BarInfo>{
+    var trimEnd = response.substringBeforeLast("endOfBarList").substringAfter("startOfBarList");
+
+}
