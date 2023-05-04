@@ -19,16 +19,14 @@ fun Bars(service: FireStore, nav: NavController) {
     val bars = remember { mutableStateOf(emptyList<Bar>()) }
     LaunchedEffect(Unit) {
         val list = service.getFarvoritesbars()
-        bars.value = list
+        if (list != null) {
+            bars.value = list
+        }
     }
     Card() {
         Column() {
             bars.value.map {
                 Column() {
-                    Row() {
-                        Text("Id: ")
-                        Text(it.id)
-                    }
                     Row() {
                         Text("Name: ")
                         Text(it.name)

@@ -4,6 +4,7 @@ package com.example.fridaybarapp.firestore.service
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -14,15 +15,15 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
     }
 
     //Not tested
-    suspend fun getFarvoritesbars(): List<Bar> {
+    suspend fun getFarvoritesbars(): List<Bar>? {
+        Log.v("getFarvoritesbars","karl")
         return suspendCoroutine { continuation ->
-            api.collection("users").document("user.id")
+            api.collection("users").document(usere.id)
                 .get()
                 .addOnSuccessListener {
-                    val favlists = it.get("Favorites") as Array<Bar>
-                        //it.documents.map { d -> Bar(d.id, d.data?.get("Name").toString()) }
-                    //val favlists = favarray?.toList()
-                    continuation.resume(favlists.toList())
+                    val test = it.get("favorites") as List<String>
+                    val favlists = test.map { d -> Bar(d) }
+                    continuation.resume(favlists)
                 }.addOnFailureListener {
                     Log.v(TAG, "We failed $it")
                     throw it
@@ -31,13 +32,16 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
     }
 
     suspend fun createFarvoritesbars(name: String) {
-        val fridaybarToFav = hashMapOf("Name" to name)
+        val fridaybarToFav = hashMapOf(
+            //"Name" to name
+            "favorites" to FieldValue.arrayUnion(name)
+        )
         suspendCoroutine { continuation ->
-            api.collection("Favorites")
-                .add(fridaybarToFav)
+            api.collection("users").document(usere.id)
+                .update(fridaybarToFav as Map<String, Any>)
                 .addOnSuccessListener { documentReference ->
-                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
-                    continuation.resume(documentReference.id)
+                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference}")
+                    continuation.resume(documentReference)
                 }
                 .addOnFailureListener { e ->
                     Log.w(TAG, "Error adding document", e)
@@ -45,7 +49,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
-
+    internal var usere = User("null","null")
     suspend fun signup(email: String, password: String) {
         suspendCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
@@ -56,11 +60,13 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         val signedInUser = user.email?.let { User(user.providerId, it) }
                             ?: throw Exception("createUserWithEmail:$email failure")
                         val field = Fields(
-                            listOf("")
+                            listOf("heste")
                         )
 
-                        //api.collection("users").document(user.providerId).set(field)
                         continuation.resume(signedInUser)
+                        task.result?.user?.uid?.let { api.collection("users").document(it).set(field)
+                            usere.id = it
+                            usere.email = email}
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "createUserWithEmail:failure", task.exception)
@@ -79,6 +85,9 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         val signedInUser = user.email?.let { User(user.providerId, it) }
                             ?: throw Exception("LoginUserWithEmail:$email failure")
                         continuation.resume(signedInUser)
+                        task.result?.user?.uid?.let {
+                            usere.id = it
+                            usere.email = email}
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "LoginUserWithEmail:failure", task.exception)
