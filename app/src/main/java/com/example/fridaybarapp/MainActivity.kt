@@ -28,6 +28,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fridaybarapp.components.Bars
+import com.example.fridaybarapp.components.Crawls
+import com.example.fridaybarapp.components.CreateCrawls
 import com.example.fridaybarapp.components.CreateFavBar
 import com.example.fridaybarapp.components.authentication.Login
 import com.example.fridaybarapp.components.authentication.Signup
@@ -69,17 +71,20 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this);
         val db = FirebaseFirestore.getInstance()
         val service = FireStore(db, auth)
+
         setContent {
             FridaybarappTheme {
                 val navController = rememberNavController()
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
                     //MapScreen(onBackClicked = { onBackPressedDispatcher.onBackPressed() })
-                    NavHost(navController = navController, startDestination = "Signup") {
+                    NavHost(navController = navController, startDestination = "Login") {
                         composable("Signup") { Signup(service, nav = navController) }
                         composable("Login") { Login(service, nav = navController) }
                         composable("CreateBar") { CreateFavBar(service, nav = navController) }
                         composable("GetBar") { Bars(service, nav = navController) }
+                        composable("GetCrawl") { Crawls(service, nav = navController) }
+                        composable("CreateCrawl") { CreateCrawls(service, nav = navController) }
                     }
                 }
             }

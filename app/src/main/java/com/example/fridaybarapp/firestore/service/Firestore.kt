@@ -36,9 +36,109 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
             //"Name" to name
             "favorites" to FieldValue.arrayUnion(name)
         )
+
         suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
                 .update(fridaybarToFav as Map<String, Any>)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference}")
+                    continuation.resume(documentReference)
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    throw e
+                }
+        }
+    }
+
+    suspend fun deleteFarvoritesbars(name: String) {
+        val fridaybarToFav = hashMapOf(
+            //"Name" to name
+            "favorites" to FieldValue.arrayRemove(name)
+        )
+
+        suspendCoroutine { continuation ->
+            api.collection("users").document(usere.id)
+                .update(fridaybarToFav as Map<String, Any>)
+                .addOnSuccessListener { documentReference ->
+                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference}")
+                    continuation.resume(documentReference)
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    throw e
+                }
+        }
+    }
+
+    suspend fun getACrawl(crawlId:String): List<Crawl>? {
+        Log.v("getFarvoritesbars","karl")
+        return suspendCoroutine { continuation ->
+            api.collection("users").document(usere.id)
+                .get()
+                .addOnSuccessListener {
+                    val test = it.get("crawls") as? Map<*, *>
+                    Log.v("getCrawl",test.toString())
+                    val array1 = test?.get(crawlId) as? List<String>
+                    Log.v("getCrawl",array1.toString())
+                    val crawllists = array1?.map { d -> Crawl(d) }
+                    continuation.resume(crawllists)
+                }.addOnFailureListener {
+                    Log.v(TAG, "We failed $it")
+                    throw it
+                }
+        }
+    }
+    suspend fun getAllCrawl(): List<List<Crawl>>? {
+        Log.v("getFarvoritesbars","karl")
+        return suspendCoroutine { continuation ->
+            api.collection("users").document(usere.id)
+                .get()
+                .addOnSuccessListener {
+                    val test = it.get("crawls") as? Map<*, Array<String>>
+                    Log.v("getAllCrawl",test.toString())
+                    //val crawllists = test?.toList()?.map { d -> Crawl(d) }
+                    val list = mutableListOf<List<Crawl>>()
+                    for (entry in test?.entries!!) {
+                        val array = entry.value
+                        list.add(array.toList().map { d -> Crawl(d) })
+                    }
+                    Log.v("getAllCrawlpls",list.toList().toString())
+                    continuation.resume(list.toList())
+                }.addOnFailureListener {
+                    Log.v(TAG, "We failed $it")
+                    throw it
+                }
+        }
+    }
+    suspend fun createCrawl(crawlId:String, name: String) {
+        val data = hashMapOf(
+            "crawls" to hashMapOf(
+                crawlId to FieldValue.arrayUnion(name)
+            )
+        )
+        val fridaybarToFav = hashMapOf(
+            //"Name" to name
+            crawlId to FieldValue.arrayUnion(name)
+        )
+        suspendCoroutine { continuation ->
+            api.collection("users").document(usere.id)
+                .update("crawls.$crawlId",FieldValue.arrayUnion(name))
+                .addOnSuccessListener { documentReference ->
+                    Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference}")
+                    continuation.resume(documentReference)
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Error adding document", e)
+                    throw e
+                }
+        }
+    }
+
+    suspend fun deleteCrawl(crawlId:String, name: String) {
+        suspendCoroutine { continuation ->
+            api.collection("users").document(usere.id)
+                .update("crawls.$crawlId",FieldValue.arrayRemove(name))
                 .addOnSuccessListener { documentReference ->
                     Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference}")
                     continuation.resume(documentReference)
