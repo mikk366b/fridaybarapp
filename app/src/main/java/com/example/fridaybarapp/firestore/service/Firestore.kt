@@ -21,8 +21,8 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
             api.collection("users").document(usere.id)
                 .get()
                 .addOnSuccessListener {
-                    val test = it.get("favorites") as List<String>
-                    val favlists = test.map { d -> Bar(d) }
+                    val test = it.get("favorites") as? List<String>
+                    val favlists = test?.map { d -> Bar(d) }
                     continuation.resume(favlists)
                 }.addOnFailureListener {
                     Log.v(TAG, "We failed $it")
@@ -60,7 +60,8 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         val signedInUser = user.email?.let { User(user.providerId, it) }
                             ?: throw Exception("createUserWithEmail:$email failure")
                         val field = Fields(
-                            listOf("heste")
+                            //listOf("heste")
+                            email
                         )
 
                         continuation.resume(signedInUser)

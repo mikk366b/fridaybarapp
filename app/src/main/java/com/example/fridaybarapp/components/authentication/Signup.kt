@@ -37,7 +37,7 @@ fun Signup(service:FireStore,nav: NavController) {
         Button(onClick = {
             scope.launch {
                 val user=service.signup(email.value,password.value)
-                nav.navigate("GetBar")
+                nav.navigate("CreateBar")
             }
         }) {
             Text("Signup")
