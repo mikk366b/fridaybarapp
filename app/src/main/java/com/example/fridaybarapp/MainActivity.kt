@@ -65,7 +65,9 @@ import kotlin.math.log
 import com.google.android.libraries.maps.CameraUpdate
 import com.google.android.libraries.maps.CameraUpdateFactory
 import com.google.android.libraries.maps.model.PolylineOptions
+import com.google.gson.JsonArray
 import com.google.maps.android.ktx.awaitMap
+import io.ktor.util.Identity.decode
 import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
@@ -112,11 +114,25 @@ fun makeNetworkRequesttest(): String? {
     }
 }
 
+
 @Composable
 fun Bars(response: String) {
     var viewDetails by remember { mutableStateOf(false) }
-    if(!viewDetails) {
-        Image(painter = painterResource(id = R.drawable.krone),
+    var lastClicked = remember {
+        mutableStateOf("")
+    }
+    var bars = remember { mutableStateOf(mutableListOf<JSONObject>()) }
+    LaunchedEffect(Unit) {
+        val JSONbars = makeNetworkRequestJSON()
+        if (JSONbars != null) {
+            for (i in 0 until JSONbars.length()) {
+                bars.value.add(JSONbars.getJSONObject(i))
+            }
+        }
+    }
+    if (!viewDetails) {
+        Image(
+            painter = painterResource(id = R.drawable.krone),
             modifier = Modifier
                 .height(80.dp)
                 .fillMaxWidth(),
@@ -127,81 +143,121 @@ fun Bars(response: String) {
             Modifier
                 .fillMaxWidth()
                 .height(2.dp)
-                .background(Color(0xFFCAA800))){
+                .background(Color(0xFFCAA800))
+        ) {
         }
         Row(
             Modifier
                 .height(35.dp)
                 .fillMaxWidth()
-                .background(Color(0xFFB90000))) {
-            Text(text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
-                style = TextStyle(color = Color(0xFFFFF0D2),
+                .background(Color(0xFFB90000))
+        ) {
+            Text(
+                text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
+                style = TextStyle(
+                    color = Color(0xFFFFF0D2),
                     fontSize = 25.sp,
                     fontWeight = FontWeight.SemiBold,
-                    shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f)
-                ))
+                    shadow = Shadow(
+                        color = Color(0xFF000000),
+                        offset = Offset(x = 2f, y = 2f),
+                        blurRadius = 1f
+                    )
+                )
+            )
         }
         Row(
             Modifier
                 .fillMaxWidth()
                 .height(2.dp)
-                .background(Color(0xFFCAA800))){
+                .background(Color(0xFFCAA800))
+        ) {
         }
 
         //Text(text = response)
         Log.v("JSON response før", response)
         val parts = response.lines()
-        for (i in 0..8) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(
-                Modifier
-                    .height(80.dp)
-                    .width(390.dp)
-                    .offset(x = 10.dp)
-                    .clickable { viewDetails = !viewDetails },
-                shape = RoundedCornerShape(20),
-                backgroundColor = Color(0xFF000000),
-                border = BorderStroke(2.dp, color = Color(0xFFA36D00))) {
-                Column {
-                    Text(
-                        text = "Approksimerbar",
-                        Modifier.offset(x = 10.dp, y = 2.dp),
-                        style = TextStyle(
-                            color = Color(0xFFFFF0D2),
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            shadow = Shadow(
-                                color = Color(0xFFE70000),
-                                offset = Offset(x = 5f, y = 4f),
-                                blurRadius = 2f
-                            )
-                        )
-                    )
-                    Text(
-                        text = "Adresse",
-                        Modifier.offset(x = 10.dp, y = 2.dp),
-                        style = TextStyle(
-                            color = Color(0xFFFFF0D2),
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            shadow = Shadow(
-                                color = Color(0xFFE70000),
-                                offset = Offset(x = 5f, y = 4f),
-                                blurRadius = 2f
-                            )
-                        )
-                    )
-                }
-                Row {
 
+        if (bars != null) {
+            for (i in 0 until bars.value.size) {
+                val bar = bars.value[i]
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    Modifier
+                        .height(80.dp)
+                        .width(390.dp)
+                        .offset(x = 10.dp)
+                        .clickable {
+                            viewDetails = !viewDetails
+                            lastClicked.value = bar.getString("name")
+                        },
+                    shape = RoundedCornerShape(20),
+                    backgroundColor = Color(0xFF000000),
+                    border = BorderStroke(2.dp, color = Color(0xFFA36D00))
+                ) {
+                    Column {
+                        Text(
+                            text = bar.getString("name"),
+                            Modifier.offset(x = 10.dp, y = 2.dp),
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2),
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                shadow = Shadow(
+                                    color = Color(0xFFE70000),
+                                    offset = Offset(x = 5f, y = 4f),
+                                    blurRadius = 2f
+                                )
+                            )
+                        )
+                        Text(
+                            text = bar.getString("address"),
+                            Modifier.offset(x = 10.dp, y = 2.dp),
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2),
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                shadow = Shadow(
+                                    color = Color(0xFFE70000),
+                                    offset = Offset(x = 5f, y = 4f),
+                                    blurRadius = 2f
+                                )
+                            )
+                        )
+                    }
+                    Row {
+
+                    }
                 }
             }
         }
+    } else {
+        var currentBar: JSONObject? = null
+        if (bars != null) {
+            for (i in 0 until bars.value.size) {
+                val bar = bars.value[i]
+                Log.v("Test", lastClicked.value)
+                if (bar.getString("name") == lastClicked.value) {
+                    currentBar = bar
+                }
+            }
+
+
+            if (currentBar != null) {
+                Text(text = currentBar.getString("name"))
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    "contentDescription",
+                    Modifier.clickable { viewDetails = !viewDetails })
+            }
+
+        }
     }
-    else {
-        Text(text = "Approksimerbar")
-        Icon(Icons.Filled.ArrowBack, "contentDescription", Modifier.clickable { viewDetails = !viewDetails })
-    }
+}
+@Composable
+fun BarListElement(name: String, address: String)
+{
+
 }
 
 @Composable
