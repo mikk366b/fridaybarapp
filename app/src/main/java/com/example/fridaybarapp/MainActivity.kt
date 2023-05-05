@@ -44,10 +44,6 @@ import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
-import com.google.firebase.FirebaseApp
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.ktx.Firebase
 import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
 import com.google.android.libraries.maps.model.LatLng
