@@ -2,14 +2,9 @@ package com.example.fridaybarapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
@@ -20,20 +15,17 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.android.libraries.maps.CameraUpdateFactory
 import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
-import com.google.android.libraries.maps.SupportMapFragment
-import com.google.gson.Gson
-import com.google.gson.JsonArray
 import com.google.maps.DirectionsApi
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
-import com.google.maps.android.Context
-import android.content.Context.LOCATION_SERVICE
 import com.google.maps.android.ktx.awaitMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -49,9 +41,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.libraries.maps.model.*
 import com.google.maps.errors.ApiException
@@ -116,10 +108,9 @@ enum class PermissionState {
 fun MapScreen() {
     val context = LocalContext.current
     val geocodehelper = GeocodeHelper(apiKey = apiKey, context = context)
-    val fusedLocationClient =
+    val fusedLocationClient: FusedLocationProviderClient =
         remember(context) { LocationServices.getFusedLocationProviderClient(context) }
     val currentLocationState = remember { mutableStateOf<Location?>(null) }
-    val routeState = remember { mutableStateOf<PolylineOptions?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val permissionState = remember { mutableStateOf(PermissionState.IDLE) }
     val requestPermissionLauncher = rememberLauncherForActivityResult(
@@ -132,15 +123,29 @@ fun MapScreen() {
         }
     }
 
+    val context2 = LocalContext.current
 
+    val mapView = rememberMapViewWithLifecycle()
     Scaffold {
-        val mapView = rememberMapViewWithLifecycle()
         AndroidView({ mapView }) { mapView ->
             coroutineScope.launch {
                 val map = mapView.awaitMap()
                 map.uiSettings.isZoomControlsEnabled = true
                 val JSONbars = makeNetworkRequestJSON()
                 val bars = JSONbars
+                geocodehelper.getUserLocation(context2) { userLocation ->
+                    if (userLocation != null) {
+                        geocodehelper.addMarker(map, userLocation, "userlocaton", "test")
+                        Log.v("locationuser", userLocation.toString())
+                        val googlplexlatlng = LatLng(37.421519, -122.088715)
+                        geocodehelper.addMarker(map, googlplexlatlng, "test", "testdid")
+                    } else {
+                        Log.v("locationtest", "location unavailable")
+                        val googlplexlatlng = LatLng(37.421519, -122.088715)
+                        geocodehelper.addMarker(map, googlplexlatlng, "test", "testdidntwork")
+                    }
+                }
+
 
                 if (bars != null) {
                     for (i in 0 until bars.length()) {
@@ -148,11 +153,13 @@ fun MapScreen() {
                         val name = bar.getString("name")
                         val address = bar.getString("address")
                         val location = geocodehelper.geocode(address)
+
                         if (location != null) {
                             val latLng = location
                             geocodehelper.addMarker(map, latLng, name, "test")
-                            val googlplexlatlng = LatLng(37.421519, -122.088715)
-                            geocodehelper.addMarker(map,googlplexlatlng,"test","test")
+
+
+
                             if (i == 1) {
                                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 12f))
                             }
@@ -161,23 +168,25 @@ fun MapScreen() {
                 }
 
                 // Request location permission and get the user's current location
-                if (ContextCompat.checkSelfPermission(context, ACCESS_FINE_LOCATION)
-                    == PERMISSION_GRANTED
+                if (ContextCompat.checkSelfPermission(
+                        context,
+                        ACCESS_FINE_LOCATION
+                    ) == PERMISSION_GRANTED
                 ) {
                     // Access to the location is already granted
                     try {
                         val location = fusedLocationClient.lastLocation.await()
                         currentLocationState.value = location
-                        geocodehelper.addMarker(
+                        /*geocodehelper.addMarker(
                             map,
                             LatLng(location.latitude, location.longitude),
                             "Current Location",
                             "test"
-                        )
+                        )*/
                     } catch (e: Exception) {
                         Toast.makeText(
                             context,
-                            "Failed to get current location",
+                            "Failed to get current location, location already provided",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -185,19 +194,19 @@ fun MapScreen() {
                     // Request access to the location
                     when (permissionState.value) {
                         PermissionState.IDLE -> {
-                            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                            requestPermissionLauncher.launch(ACCESS_FINE_LOCATION)
                         }
                         PermissionState.GRANTED -> {
                             // Permission has been granted by the user
                             try {
                                 val location = fusedLocationClient.lastLocation.await()
                                 currentLocationState.value = location
-                                geocodehelper.addMarker(
+                                /*geocodehelper.addMarker(
                                     map,
                                     LatLng(location.latitude, location.longitude),
                                     "Current Location",
                                     "test"
-                                )
+                                )*/
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     context,
@@ -215,46 +224,20 @@ fun MapScreen() {
                             ).show()
                         }
                     }
-                    // Add a "Get route" button to the map marker info window
-                    map.setOnMarkerClickListener { marker ->
-                        if (marker.title != "Current Location") {
-                            coroutineScope.launch {
-                                val currentLocation = currentLocationState.value
-                                if (currentLocation != null) {
-                                    val route = geocodehelper.getRoute(
-                                        LatLng(currentLocation.latitude, currentLocation.longitude),
-                                        marker.position
-                                    )
-                                    routeState.value = route as PolylineOptions?
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Failed to get current location",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
-                            }
-                        }
-                        false
-                    }
-
-                    // Draw the route on the map
-                    val route = routeState.value
-                    if (route != null) {
-                        map.addPolyline(route)
-                    }
                 }
             }
         }
     }
 }
+
+
 class GeocodeHelper(private val context: android.content.Context, private val apiKey: String) {
     private val geoApiContext: GeoApiContext by lazy {
         GeoApiContext.Builder()
             .apiKey(apiKey)
             .build()
     }
+
 
     suspend fun geocode(placeName: String): LatLng? = withContext(Dispatchers.IO) {
         try {
@@ -315,20 +298,31 @@ class GeocodeHelper(private val context: android.content.Context, private val ap
             .build()
         return geoApiContext
     }
-    fun getUserLocation(): LatLng? {
-        val locationManager = context.getSystemService(
-            Context.getApplicationContext(
-            ).toString()
-        ) as? LocationManager
-        if (ActivityCompat.checkSelfPermission(context, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED
-            && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED) {
-            return null
+    private val REQUEST_LOCATION_PERMISSION_CODE = 1001
+    fun getUserLocation(context: Context, callback: (LatLng?) -> Unit) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
-        val location = locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-        return if (location != null) {
-            LatLng(location.latitude, location.longitude)
-        } else {
-            null
+
+        val permission = Manifest.permission.ACCESS_FINE_LOCATION
+
+        if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+            // Request permission
+            callback(null)
+            return
         }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult?.lastLocation?.let { location ->
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    callback(latLng)
+                } ?: run {
+                    callback(null)
+                }
+                fusedLocationClient.removeLocationUpdates(this) // Remove the updates listener
+            }
+        }, null)
     }
 }

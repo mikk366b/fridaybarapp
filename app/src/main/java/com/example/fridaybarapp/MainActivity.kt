@@ -112,6 +112,11 @@ fun makeNetworkRequesttest(): String? {
 fun Bars(response: String) {
     var viewDetails by remember { mutableStateOf(false) }
     if(!viewDetails) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ){
         Image(painter = painterResource(id = R.drawable.krone),
             modifier = Modifier
                 .height(80.dp)
@@ -187,7 +192,7 @@ fun Bars(response: String) {
                             )
                         )
                     )
-                }
+                }}
                 Row {
 
                 }
