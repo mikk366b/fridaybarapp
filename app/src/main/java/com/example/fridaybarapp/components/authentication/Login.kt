@@ -37,7 +37,7 @@ fun Login(service: FireStore, nav: NavController) {
         Button(onClick = {
             scope.launch {
                 val user = service.login(email.value, password.value)
-                nav.navigate("Horses")
+                nav.navigate("GetCrawl")
             }
         }) {
             Text("Login")

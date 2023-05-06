@@ -1,3 +1,3 @@
 package com.example.fridaybarapp.firestore.service
 
-data class User(var id:String,var email:String)
+data class Crawl (val name: String)
