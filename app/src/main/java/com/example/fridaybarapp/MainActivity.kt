@@ -22,23 +22,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.*
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.example.fridaybarapp.firestore.service.FireStore
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FridaybarappTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF014C2D)) {
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF014C05)) {
                     NetworkResponseUI()
                 }
             }
@@ -113,58 +113,186 @@ fun makeNetworkRequesttest(): String? {
 @Composable
 fun Bars(response: String) {
     var viewDetails by remember { mutableStateOf(false) }
-    if(!viewDetails) {
-        Image(painter = painterResource(id = R.drawable.krone),
-            modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth(),
-            contentDescription = null,
-            alignment = Alignment.Center
-        )
-        Row(Modifier.fillMaxWidth().height(2.dp).background(Color(0xFFCAA800))){
-        }
-        Row(Modifier.height(35.dp).fillMaxWidth().background(Color(0xFFB90000))) {
-            Text(text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
-                style = TextStyle(color = Color(0xFFFFF0D2),
+    var barName by remember { mutableStateOf("") }
+    val mBars = listOf("A bar", "B bar", "C bar", "D bar", "E bar")
+    Image(painter = painterResource(id = R.drawable.krone),
+        modifier = Modifier
+            .height(80.dp)
+            .fillMaxWidth(),
+        contentDescription = null,
+        alignment = Alignment.Center
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color(0xFF000000))){
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(2.5.dp)
+            .background(Color(0xFFF5B633))){
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color(0xFF000000))){
+    }
+    Row(
+        Modifier
+            .height(35.dp)
+            .fillMaxWidth()
+            .background(Color(0xFFB90000))) {
+        if(!viewDetails) {
+            Text(
+                text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
+                style = TextStyle(
+                    color = Color(0xFFFFF0D2),
                     fontSize = 25.sp,
                     fontWeight = FontWeight.SemiBold,
-                    shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f)
-                ))
+                    shadow = Shadow(
+                        color = Color(0xFF000000),
+                        offset = Offset(x = 2f, y = 2f),
+                        blurRadius = 1f
+                    )
+                )
+            )
         }
-        Row(Modifier.fillMaxWidth().height(2.dp).background(Color(0xFFCAA800))){
+        else {
+            Icon(Icons.Filled.KeyboardArrowLeft, "contentDescription",
+                Modifier
+                    .clickable { viewDetails = !viewDetails }
+                    .size(35.dp)
+                    .offset(x = 0.dp),
+                tint = Color(0xFFFFF0D2)
+                )
+            Text(
+                text = barName, Modifier.offset(x = 2.dp, y = -(0).dp),
+                style = TextStyle(
+                    color = Color(0xFFFFF0D2),
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    shadow = Shadow(
+                        color = Color(0xFF000000),
+                        offset = Offset(x = 2f, y = 2f),
+                        blurRadius = 1f
+                    )
+                )
+            )
         }
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color(0xFF000000))){
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(2.5.dp)
+            .background(Color(0xFFF5B633))){
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(Color(0xFF000000))){
+    }
+    if(!viewDetails) {
+
 
         //Text(text = response)
         Log.v("JSON response før", response)
         val parts = response.lines()
-        for (i in 0..8) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(Modifier.height(80.dp).width(390.dp).offset(x = 10.dp).clickable { viewDetails = !viewDetails },
-                shape = RoundedCornerShape(20),
-                backgroundColor = Color(0xFF000000),
-                border = BorderStroke(2.dp, color = Color(0xFFA36D00))) {
-                Column {
-                    Text(
-                        text = "Approksimerbar",
-                        Modifier.offset(x = 10.dp, y = 2.dp),
-                        style = TextStyle(
-                            color = Color(0xFFFFF0D2),
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            shadow = Shadow(
-                                color = Color(0xFFE70000),
-                                offset = Offset(x = 5f, y = 4f),
-                                blurRadius = 2f
+        for (i in 0..4) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(
+                Modifier
+                    .height(80.dp)
+                    .width(390.dp)
+                    .offset(x = 10.dp)
+                    .clickable {
+                        viewDetails = !viewDetails
+                        barName = mBars[i]
+                    },
+                shape = RoundedCornerShape(30),
+                border = BorderStroke(2.dp, color = Color(0xFF000000)),
+                backgroundColor = Color(0xFF968560)) {
+                Card(Modifier.padding(4.dp),
+                    shape = RoundedCornerShape(28),
+                    backgroundColor = Color(0xFF000000),
+                    border = BorderStroke(0.dp, color = Color(0xFF968560))) {
+                    Column {
+                        Text(
+                            text = mBars[i],
+                            Modifier.offset(x = 10.dp, y = 2.dp),
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2),
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Bold,
+                                shadow = Shadow(
+                                    color = Color(0xFFE70000),
+                                    offset = Offset(x = 5f, y = 4f),
+                                    blurRadius = 2f
+                                )
                             )
                         )
-                    )
+                        Text(
+                            text = "Adresse",
+                            Modifier.offset(x = 10.dp, y = 2.dp),
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2),
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Bold,
+                                shadow = Shadow(
+                                    color = Color(0xFFE70000),
+                                    offset = Offset(x = 5f, y = 4f),
+                                    blurRadius = 2f
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+
+        }
+    }
+    else {
+        Spacer(modifier = Modifier.height(5.dp))
+        Card(Modifier
+            .height(365.dp)
+            .width(390.dp)
+            .offset(x = 10.dp),
+            shape = RoundedCornerShape(1),
+            border = BorderStroke(2.dp, color = Color(0xFF000000)),
+            backgroundColor = Color(0xFF014C05)
+        ) {
+            
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Card(
+            Modifier
+                .height(80.dp)
+                .width(390.dp)
+                .offset(x = 10.dp),
+            shape = RoundedCornerShape(30),
+            border = BorderStroke(2.dp, color = Color(0xFF000000)),
+            backgroundColor = Color(0xFF968560)) {
+            Card(Modifier.padding(4.dp),
+                shape = RoundedCornerShape(28),
+                backgroundColor = Color(0xFF000000),
+                border = BorderStroke(0.dp, color = Color(0xFF968560))) {
+                Column {
                     Text(
                         text = "Adresse",
                         Modifier.offset(x = 10.dp, y = 2.dp),
                         style = TextStyle(
                             color = Color(0xFFFFF0D2),
                             fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             shadow = Shadow(
                                 color = Color(0xFFE70000),
                                 offset = Offset(x = 5f, y = 4f),
@@ -172,16 +300,25 @@ fun Bars(response: String) {
                             )
                         )
                     )
-                }
-                Row {
-
+                    Text(
+                        text = "Facebook",
+                        Modifier.offset(x = 10.dp, y = 2.dp),
+                        style = TextStyle(
+                            color = Color(0xFFFFE99B),
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            textDecoration = TextDecoration.Underline,
+                            shadow = Shadow(
+                                color = Color(0xFF00FF22),
+                                offset = Offset(x = 2f, y = 2f),
+                                blurRadius = 0f
+                            )
+                        )
+                    )
                 }
             }
         }
-    }
-    else {
-        Text(text = "Approksimerbar")
-        Icon(Icons.Filled.ArrowBack, "contentDescription", Modifier.clickable { viewDetails = !viewDetails })
+
     }
 }
 
@@ -196,6 +333,7 @@ fun NetworkResponseUI() {
     // Create a list of cities
     val mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl")
 
+
     // Create a string value to store the selected city
     var mSelectedText by remember { mutableStateOf(mScreens[1]) }
 
@@ -203,7 +341,7 @@ fun NetworkResponseUI() {
 
     // Up Icon when expanded and down icon when collapsed
     val color = if (mExpanded)
-        Color(0xFFFAE6C8)
+        Color(0xFFFADCB4)
     else
         Color(0xFFFFF0D2)
 
@@ -221,9 +359,29 @@ fun NetworkResponseUI() {
 
     // Display the response in a Text composable
     Column {
-        Row(Modifier.fillMaxWidth().height(15.dp).background(Color(0xFF014C2D))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(15.dp)
+                .background(Color(0xFF014C05))){
         }
-        Row(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFF000000))){
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Color(0xFFF5B633))){
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFF000000))){
         }
         Row(
             Modifier
@@ -239,34 +397,71 @@ fun NetworkResponseUI() {
             Row(
                 Modifier
                     .fillMaxSize()
-                    .offset(x = (-30).dp, y = 1.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
-                Text(text = mSelectedText, style = TextStyle(
-                    color = Color(0xFFFFF0D2), fontSize = 35.sp, fontWeight = FontWeight.Bold,
-                shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f)))
+                    .offset(x = (-27).dp, y = -(3).dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically){
+                Text(text = mSelectedText,
+                    style = TextStyle(color = Color(0xFFFFF0D2),
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 3f, y = 3f), blurRadius = 1f),
+                        letterSpacing = 3.sp
+                    ))
             }
 
             DropdownMenu(
                 expanded = mExpanded,
                 onDismissRequest = { mExpanded = false },
                 modifier = Modifier
-                    .width(200.dp)
-                    //.border(width = 1.dp, color = Color(0xFF337800))
-                    .background(color = Color(0xFFB9CDFF))
+                    .width(300.dp)
+                    .border(width = 3.dp, color = Color(0xFF000000), shape = RoundedCornerShape(3))
+                    .background(color = Color(0xFF014C05)),
+                offset = DpOffset(x = 2.dp, y = 4.dp)
             ) {
                 mScreens.forEach { label ->
                     DropdownMenuItem(onClick = {
                         mSelectedText = label
                         mExpanded = false
-                    }) {
-                        Text(text = label, style = TextStyle(color = Color.Black, fontSize = 20.sp))
+                    }, modifier = Modifier.sizeIn(minHeight = 80.dp),
+                    contentPadding = PaddingValues(0.dp)) {
+                        Text(text = label,
+                            modifier = Modifier
+                                .border(1.5.dp, color = Color(0xFFF5B633))
+                                .fillMaxWidth()
+                                .background(color = Color(0xFFB90000))
+                                .offset(y = -(3).dp),
+                            lineHeight = 5.sp,
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                                shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f),
+                                textDecoration = TextDecoration.Underline,
+                                textIndent = TextIndent(firstLine = 15.sp)
+                            ))
                     }
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFCAA800))){
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFF000000))){
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Color(0xFFF5B633))){
+        }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFF000000))){
         }
         Column(Modifier.offset(y = 0.dp)) {
             if (mSelectedText == mScreens[1]) {
+                Bars(response)
+            }
+            if (mSelectedText == mScreens[2]) {
                 Bars(response)
             }
         }
