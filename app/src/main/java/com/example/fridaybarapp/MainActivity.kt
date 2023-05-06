@@ -1,28 +1,20 @@
 package com.example.fridaybarapp
 
-import android.annotation.SuppressLint
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
@@ -31,45 +23,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import com.example.fridaybarapp.components.authentication.Login
+import com.example.fridaybarapp.components.authentication.SignupLogin
 import com.example.fridaybarapp.firestore.service.FireStore
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
-import com.google.android.libraries.maps.GoogleMap
-import com.google.android.libraries.maps.MapView
-import com.google.android.libraries.maps.model.LatLng
-import com.google.android.libraries.maps.model.MarkerOptions
-import io.ktor.http.cio.*
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-
-import kotlin.math.log
-import com.google.android.libraries.maps.CameraUpdate
-import com.google.android.libraries.maps.CameraUpdateFactory
-import com.google.android.libraries.maps.model.PolylineOptions
-import com.google.gson.JsonArray
-import com.google.maps.android.ktx.awaitMap
-import io.ktor.util.Identity.decode
-import kotlinx.coroutines.*
-import org.w3c.dom.Comment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,7 +49,7 @@ class MainActivity : ComponentActivity() {
             FridaybarappTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF014C2D)) {
-                    NetworkResponseUI()
+                    NetworkResponseUI(db, service)
 
                 }
             }
@@ -247,7 +214,7 @@ fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
 }
 
 @Composable
-fun NetworkResponseUI() {
+fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore ) {
     var response by remember { mutableStateOf("") }
 
     // Declaring a boolean value to store
@@ -339,6 +306,9 @@ fun NetworkResponseUI() {
                 .background(Color(0xFFCAA800))){
         }
         Column(Modifier.offset(y = 0.dp)) {
+            if (mSelectedText == mScreens[0]){
+                SignupLogin(service)
+            }
             if (mSelectedText == mScreens[1]) {
                 Bars(response)
             }
