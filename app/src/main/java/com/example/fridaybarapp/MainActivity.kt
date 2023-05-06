@@ -69,6 +69,7 @@ import com.google.gson.JsonArray
 import com.google.maps.android.ktx.awaitMap
 import io.ktor.util.Identity.decode
 import kotlinx.coroutines.*
+import org.w3c.dom.Comment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,7 +95,6 @@ fun Greeting(name: String) {
     Text(text = "Hello $name! Hej Igen")
 }
 
-
 @Composable
 fun DefaultPreview() {
     FridaybarappTheme {
@@ -117,7 +117,6 @@ fun makeNetworkRequesttest(): String? {
         return "didnt work"
     }
 }
-
 
 @Composable
 fun Bars(response: String) {
@@ -156,19 +155,7 @@ fun Bars(response: String) {
                 .fillMaxWidth()
                 .background(Color(0xFFB90000))
         ) {
-            Text(
-                text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
-                style = TextStyle(
-                    color = Color(0xFFFFF0D2),
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    shadow = Shadow(
-                        color = Color(0xFF000000),
-                        offset = Offset(x = 2f, y = 2f),
-                        blurRadius = 1f
-                    )
-                )
-            )
+            CustomText(data = "List of friday bars", fontSize = 25, Modifier.offset(x = 10.dp, y = -(2).dp))
         }
         Row(
             Modifier
@@ -199,35 +186,9 @@ fun Bars(response: String) {
                     backgroundColor = Color(0xFF000000),
                     border = BorderStroke(2.dp, color = Color(0xFFA36D00))
                 ) {
-                    Column {
-                        Text(
-                            text = bar.getString("name"),
-                            Modifier.offset(x = 10.dp, y = 2.dp),
-                            style = TextStyle(
-                                color = Color(0xFFFFF0D2),
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                shadow = Shadow(
-                                    color = Color(0xFFE70000),
-                                    offset = Offset(x = 5f, y = 4f),
-                                    blurRadius = 2f
-                                )
-                            )
-                        )
-                        Text(
-                            text = bar.getString("address"),
-                            Modifier.offset(x = 10.dp, y = 2.dp),
-                            style = TextStyle(
-                                color = Color(0xFFFFF0D2),
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                shadow = Shadow(
-                                    color = Color(0xFFE70000),
-                                    offset = Offset(x = 5f, y = 4f),
-                                    blurRadius = 2f
-                                )
-                            )
-                        )
+                    Column(Modifier.padding(15.dp)) {
+                        CustomText(data = bar.getString("name"), fontSize = 25)
+                        CustomText(data = bar.getString("address"), fontSize = 15)
                     }
                     Row {
 
@@ -236,32 +197,53 @@ fun Bars(response: String) {
             }
         }
     } else {
+        //Individuel bar side
         var currentBar: JSONObject? = null
         if (bars != null) {
             for (i in 0 until bars.value.size) {
                 val bar = bars.value[i]
-                Log.v("Test", lastClicked.value)
                 if (bar.getString("name") == lastClicked.value) {
                     currentBar = bar
                 }
             }
 
-
             if (currentBar != null) {
-                Text(text = currentBar.getString("name"))
+
+                Column(Modifier.padding(10.dp)) {
+                    CustomText(data = currentBar.getString("name"), fontSize = 25)
+                    CustomText(data = currentBar.getString("address"), fontSize = 15)
+                }
+
                 Icon(
                     Icons.Filled.ArrowBack,
                     "contentDescription",
                     Modifier.clickable { viewDetails = !viewDetails })
+            }
+            else{
+                //Burde ikke nå hertil, men bare for at være sikker
+                viewDetails = !viewDetails
             }
 
         }
     }
 }
 @Composable
-fun BarListElement(name: String, address: String)
+fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
 {
-
+    Text(
+        text = data,
+        modifier = modifier,
+        style = TextStyle(
+            color = Color(0xFFFFF0D2),
+            fontSize = fontSize.sp,
+            fontWeight = FontWeight.SemiBold,
+            shadow = Shadow(
+                color = Color(0xFFE70000),
+                offset = Offset(x = 5f, y = 4f),
+                blurRadius = 2f
+            )
+        )
+    )
 }
 
 @Composable
