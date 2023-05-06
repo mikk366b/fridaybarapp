@@ -29,6 +29,7 @@ import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.provider.ContactsContract.CommonDataKinds.Website.URL
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,7 +55,9 @@ import com.google.maps.model.TravelMode
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.IOException
+import java.net.URL
 
 val apiKey = "AIzaSyCQoksz4IDUyavwb4TU3U5JdpPMyXbzPSE"
 @Composable
@@ -113,6 +116,8 @@ fun MapScreen() {
     val currentLocationState = remember { mutableStateOf<Location?>(null) }
     val coroutineScope = rememberCoroutineScope()
     val permissionState = remember { mutableStateOf(PermissionState.IDLE) }
+    val selectedMarkerState = remember { mutableStateOf<Marker?>(null) }
+    val currentLocationMarkerState = remember { mutableStateOf<Marker?>(null) }
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -122,9 +127,9 @@ fun MapScreen() {
             permissionState.value = PermissionState.DENIED
         }
     }
-
+    val markerLatLngMap = remember { mutableMapOf<Marker, LatLng>() }
     val context2 = LocalContext.current
-
+    val currentRoute = remember { mutableStateOf<Polyline?>(null) }
     val mapView = rememberMapViewWithLifecycle()
     Scaffold {
         AndroidView({ mapView }) { mapView ->
@@ -133,20 +138,11 @@ fun MapScreen() {
                 map.uiSettings.isZoomControlsEnabled = true
                 val JSONbars = makeNetworkRequestJSON()
                 val bars = JSONbars
-                geocodehelper.getUserLocation(context2) { userLocation ->
-                    if (userLocation != null) {
-                        geocodehelper.addMarker(map, userLocation, "userlocaton", "test")
-                        Log.v("locationuser", userLocation.toString())
-                        val googlplexlatlng = LatLng(37.421519, -122.088715)
-                        geocodehelper.addMarker(map, googlplexlatlng, "test", "testdid")
-                    } else {
-                        Log.v("locationtest", "location unavailable")
-                        val googlplexlatlng = LatLng(37.421519, -122.088715)
-                        geocodehelper.addMarker(map, googlplexlatlng, "test", "testdidntwork")
-                    }
+                val googleplexcoord = LatLng(37.42106013828215, -122.08605307914131)
+                map.setOnMarkerClickListener { marker ->
+                    marker.showInfoWindow()
+                    true
                 }
-
-
                 if (bars != null) {
                     for (i in 0 until bars.length()) {
                         val bar = bars.getJSONObject(i)
@@ -156,7 +152,36 @@ fun MapScreen() {
 
                         if (location != null) {
                             val latLng = location
-                            geocodehelper.addMarker(map, latLng, name, "test")
+                            val marker = geocodehelper.addMarker(map, latLng, name, "test")
+                            markerLatLngMap[marker] = latLng
+                            val marker2 = geocodehelper.addMarker(map,googleplexcoord , "googleplextest", "test")
+                            markerLatLngMap[marker2] = googleplexcoord
+
+                            map.setOnMarkerClickListener { clickedMarker ->
+                                currentRoute.value?.remove()
+                                val destination = markerLatLngMap[clickedMarker]
+                                if (destination != null) {
+                                    val origin = currentLocationState.value
+                                    if (origin != null) {
+                                        val originLatLng = LatLng(origin.latitude, origin.longitude)
+                                        coroutineScope.launch {
+                                            val directionsResult = geocodehelper.getDirections(originLatLng, destination)
+                                            if (directionsResult != null) {
+                                                val polylineOptions = PolylineOptions().addAll(directionsResult).color(Color.BLUE)
+                                                val polyline = map.addPolyline(polylineOptions)
+                                                currentRoute.value = polyline
+
+                                            } else {
+                                                Toast.makeText(context, "Failed to get directions", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Current location not available", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                                marker.showInfoWindow()
+                                return@setOnMarkerClickListener false
+                            }
 
 
 
@@ -175,14 +200,54 @@ fun MapScreen() {
                 ) {
                     // Access to the location is already granted
                     try {
-                        val location = fusedLocationClient.lastLocation.await()
-                        currentLocationState.value = location
-                        /*geocodehelper.addMarker(
-                            map,
-                            LatLng(location.latitude, location.longitude),
-                            "Current Location",
-                            "test"
-                        )*/
+
+                        val locationRequest = LocationRequest.create().apply {
+                            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                            interval = 5000 // Update location every 5 seconds
+                        }
+
+                        val locationCallback = object : LocationCallback() {
+                            override fun onLocationResult(locationResult: LocationResult?) {
+                                locationResult?.lastLocation?.let { location ->
+                                    val latLng = LatLng(location.latitude, location.longitude)
+                                    currentLocationState.value = location
+
+                                    if (currentLocationMarkerState.value == null) {
+                                        val marker = geocodehelper.addMarker(
+                                            map,
+                                            latLng,
+                                            "Current Location",
+                                            "test",
+                                            markerColor = BitmapDescriptorFactory.HUE_GREEN
+                                        )
+                                        currentLocationMarkerState.value = marker
+                                    } else {
+                                        currentLocationMarkerState.value?.position = latLng
+                                    }
+
+                                    val clickedMarker = selectedMarkerState.value
+                                    if (clickedMarker != null) {
+                                        val destination = markerLatLngMap[clickedMarker]
+                                        if (destination != null) {
+                                            currentRoute.value?.remove()
+                                            coroutineScope.launch {
+                                                val directionsResult = geocodehelper.getDirections(latLng, destination)
+                                                if (directionsResult != null) {
+                                                    val polylineOptions = PolylineOptions().addAll(directionsResult).color(Color.BLUE)
+                                                    val polyline = map.addPolyline(polylineOptions)
+                                                    currentRoute.value = polyline
+                                                } else {
+                                                    Toast.makeText(context, "Failed to get directions", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+
                     } catch (e: Exception) {
                         Toast.makeText(
                             context,
@@ -201,12 +266,6 @@ fun MapScreen() {
                             try {
                                 val location = fusedLocationClient.lastLocation.await()
                                 currentLocationState.value = location
-                                /*geocodehelper.addMarker(
-                                    map,
-                                    LatLng(location.latitude, location.longitude),
-                                    "Current Location",
-                                    "test"
-                                )*/
                             } catch (e: Exception) {
                                 Toast.makeText(
                                     context,
@@ -237,7 +296,72 @@ class GeocodeHelper(private val context: android.content.Context, private val ap
             .apiKey(apiKey)
             .build()
     }
+    suspend fun getDirections(origin: LatLng, destination: LatLng): List<LatLng>? {
+        val directionsUrl = "https://maps.googleapis.com/maps/api/directions/json" +
+                "?origin=${origin.latitude},${origin.longitude}" +
+                "&destination=${destination.latitude},${destination.longitude}" +
+                "&key=$apiKey"
 
+        val result = try {
+            val response = withContext(Dispatchers.IO) { URL(directionsUrl).readBytes() }
+            val jsonResult = String(response)
+            val jsonObject = JSONObject(jsonResult)
+            val routes = jsonObject.getJSONArray("routes")
+            val legs = routes.getJSONObject(0).getJSONArray("legs")
+            val steps = legs.getJSONObject(0).getJSONArray("steps")
+            val polylineList = mutableListOf<LatLng>()
+            if (routes.length() > 0){
+            for (i in 0 until steps.length()) {
+                val encodedPolyline = steps.getJSONObject(i).getJSONObject("polyline").getString("points")
+                val decodedPolyline = decodePolyline(encodedPolyline)
+                polylineList.addAll(decodedPolyline)
+            }
+            }else {
+                Log.e("GeocodeHelper", "No routes found")
+                return null
+            }
+            polylineList
+        } catch (e: Exception) {
+            Log.e("GeocodeHelper", "Failed to get directions", e)
+            null
+        }
+
+        return result
+    }
+
+    private fun decodePolyline(encodedPolyline: String): List<LatLng> {
+        val polyline = mutableListOf<LatLng>()
+        var index = 0
+        var lat = 0
+        var lng = 0
+
+        while (index < encodedPolyline.length) {
+            var shift = 0
+            var result = 0
+            do {
+                val b = encodedPolyline[index++].code - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlat = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+            lat += dlat
+
+            shift = 0
+            result = 0
+            do {
+                val b = encodedPolyline[index++].toInt() - 63
+                result = result or (b and 0x1f shl shift)
+                shift += 5
+            } while (b >= 0x20)
+            val dlng = if (result and 1 != 0) (result shr 1).inv() else result shr 1
+            lng += dlng
+
+            val latLng = LatLng(lat.toDouble() / 1E5, lng.toDouble() / 1E5)
+            polyline.add(latLng)
+        }
+
+        return polyline
+    }
 
     suspend fun geocode(placeName: String): LatLng? = withContext(Dispatchers.IO) {
         try {
@@ -253,14 +377,17 @@ class GeocodeHelper(private val context: android.content.Context, private val ap
         }
     }
 
-    fun addMarker(map: GoogleMap, position: LatLng, title: String?, snippet: String) {
-        map.addMarker(
-            MarkerOptions()
-                .position(position)
-                .title(title)
-                .snippet(snippet)
-        )
+    fun addMarker(map: GoogleMap, latLng: LatLng, title: String, snippet: String, markerColor: Float? = null): Marker {
+        val markerOptions = MarkerOptions()
+            .position(latLng)
+            .title(title)
+            .snippet(snippet)
 
+        if (markerColor != null) {
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(markerColor))
+        }
+
+        return map.addMarker(markerOptions)
     }
     suspend fun getRoute(origin: LatLng, destination: LatLng): Any? = withContext(Dispatchers.IO) {
         try {
