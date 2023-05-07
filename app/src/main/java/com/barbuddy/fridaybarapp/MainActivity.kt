@@ -25,7 +25,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
+import com.barbuddy.fridaybarapp.components.GetBars
 import com.barbuddy.fridaybarapp.components.authentication.SignupLogin
+import com.barbuddy.fridaybarapp.components.getCrawls
 import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.ui.theme.FridaybarappTheme
 import kotlinx.coroutines.Dispatchers
@@ -218,7 +220,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
     var mExpanded by remember { mutableStateOf(false) }
 
     // Create a list of cities
-    val mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl", "Favorites")
+    var mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl", "Favorites")
 
     // Create a string value to store the selected city
     var mSelectedText by remember { mutableStateOf(mScreens[1]) }
@@ -323,6 +325,12 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
             }
             if (mSelectedText == mScreens[2]){
                 MapScreen()
+            }
+            if (mSelectedText == mScreens[3]){
+                getCrawls(service)
+            }
+            if (mSelectedText == mScreens[4]){
+                GetBars(service)
             }
         }
 

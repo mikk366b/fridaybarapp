@@ -97,12 +97,15 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
             api.collection("users").document(usere.id)
                 .get()
                 .addOnSuccessListener {
-                    val test = it.get("crawls") as? Map<*, Array<String>>
+                    val test = it.get("crawls") as? Map<*, ArrayList<String>>
                     Log.v("getAllCrawl",test.toString())
                     //val crawllists = test?.toList()?.map { d -> Crawl(d) }
                     val list = mutableListOf<List<Crawl>>()
+                    Log.v("1",test.toString())
                     for (entry in test?.entries!!) {
+                        Log.v("2",test.toString())
                         val array = entry.value
+                        Log.v("3",test.toString())
                         list.add(array.toList().map { d -> Crawl(d) })
                     }
                     Log.v("getAllCrawlpls",list.toList().toString())
@@ -152,6 +155,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
         }
     }
     internal var usere = User("null","null")
+    internal var loggedIn = false
     suspend fun signup(email: String, password: String): String {
          return suspendCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
@@ -169,7 +173,8 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         continuation.resume("Sign up successful")
                         task.result?.user?.uid?.let { api.collection("users").document(it).set(field)
                             usere.id = it
-                            usere.email = email}
+                            usere.email = email
+                            loggedIn = true}
                     } else {
                         when (task.exception) {
                             is FirebaseAuthUserCollisionException -> {
@@ -201,7 +206,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         task.result?.user?.uid?.let {
                             usere.id = it
                             usere.email = email
-                        }
+                            loggedIn = true}
                     } else {
                         when (task.exception) {
                             is FirebaseAuthInvalidUserException -> {

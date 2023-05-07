@@ -15,7 +15,7 @@ import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.firestore.service.Bar
 
 @Composable
-fun Bars(service: FireStore, nav: NavController) {
+fun GetBars(service: FireStore) { //nav: NavController
     val bars = remember { mutableStateOf(emptyList<Bar>()) }
     LaunchedEffect(Unit) {
         val list = service.getFarvoritesbars()
@@ -26,14 +26,15 @@ fun Bars(service: FireStore, nav: NavController) {
     Card() {
         Column() {
             bars.value.map {
-                Column() {
+                Card() {
                     Row() {
                         Text("Name: ")
                         Text(it.name)
                     }
                 }
             }
-            Button(onClick = { nav.navigate("CreateBar") }) {
+            Button(onClick = { //nav.navigate("CreateBar")
+            }) {
                 Text("Create Horse")
             }
         }
