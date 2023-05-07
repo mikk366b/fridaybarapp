@@ -1,5 +1,7 @@
 package com.example.fridaybarapp.components.authentication
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +23,12 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContentProviderCompat.requireContext
+import com.example.fridaybarapp.MainActivity
+import com.example.fridaybarapp.firestore.service.User
+import com.google.maps.android.Context.getApplicationContext
+import java.security.AccessController.getContext
 
 @Composable
 fun SignupLogin(service: FireStore) { //, nav: NavController
@@ -28,6 +36,7 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
     val password = remember { mutableStateOf("") }
     var isPasswordVisible = remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     Column() {
         Row() {
             Text("Email:")
@@ -51,7 +60,8 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
         }
         Button(onClick = {
             scope.launch {
-                val user = service.login(email.value, password.value)
+                val result = service.login(email.value, password.value)
+                Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                 //nav.navigate("GetCrawl")
             }
         }) {
@@ -59,7 +69,8 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
         }
         Button(onClick = {
             scope.launch {
-                val user = service.signup(email.value, password.value)
+                val result = service.signup(email.value, password.value)
+                Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                 //nav.navigate("GetCrawl")
             }
         }) {

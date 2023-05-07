@@ -1,5 +1,6 @@
 package com.example.fridaybarapp
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import com.example.fridaybarapp.components.authentication.Login
 import com.example.fridaybarapp.components.authentication.SignupLogin
 import com.example.fridaybarapp.firestore.service.FireStore
+import com.example.fridaybarapp.firestore.service.User
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import kotlinx.coroutines.Dispatchers
 import com.google.firebase.FirebaseApp
@@ -214,9 +216,8 @@ fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
 }
 
 @Composable
-fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore ) {
+fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
     var response by remember { mutableStateOf("") }
-
     // Declaring a boolean value to store
     // the expanded state of the Text Field
     var mExpanded by remember { mutableStateOf(false) }

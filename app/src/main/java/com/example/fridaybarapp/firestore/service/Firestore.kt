@@ -4,6 +4,9 @@ package com.example.fridaybarapp.firestore.service
 import android.util.Log
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.coroutines.resume
@@ -150,8 +153,8 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
         }
     }
     internal var usere = User("null","null")
-    suspend fun signup(email: String, password: String) {
-        suspendCoroutine { continuation ->
+    suspend fun signup(email: String, password: String): String {
+         return suspendCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -164,20 +167,30 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                             email
                         )
 
-                        continuation.resume(signedInUser)
+                        continuation.resume("Sign up successful")
                         task.result?.user?.uid?.let { api.collection("users").document(it).set(field)
                             usere.id = it
                             usere.email = email}
                     } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                        throw throw Exception("createUserWithEmail: $email failure", task.exception)
+                        when (task.exception) {
+                            is FirebaseAuthUserCollisionException -> {
+                            // User already exists, handle accordingly
+                            continuation.resume("User already exists")}
+                            is FirebaseAuthInvalidCredentialsException -> {
+                            // Invalid email/password, handle accordingly
+                            continuation.resume("Invalid email/password") }
+                            else -> {
+                            // Other exception, handle accordingly
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "createUserWithEmail:failure", task.exception)
+                            throw throw Exception("createUserWithEmail: $email failure", task.exception) }
                     }
                 }
+            }
         }
     }
-    suspend fun login(email: String, password: String) {
-        suspendCoroutine { continuation ->
+    suspend fun login(email: String, password: String): String {
+        return suspendCoroutine { continuation ->
             auth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -185,16 +198,34 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                         val user = auth.currentUser ?: throw Exception("Something wrong")
                         val signedInUser = user.email?.let { User(user.providerId, it) }
                             ?: throw Exception("LoginUserWithEmail:$email failure")
-                        continuation.resume(signedInUser)
+                        continuation.resume("Login successful") //signedInUser
                         task.result?.user?.uid?.let {
                             usere.id = it
-                            usere.email = email}
+                            usere.email = email
+                        }
                     } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w(TAG, "LoginUserWithEmail:failure", task.exception)
-                        throw throw Exception("LoginUserWithEmail: $email failure", task.exception)
+                        when (task.exception) {
+                            is FirebaseAuthInvalidUserException -> {
+                                // User does not exist, handle accordingly
+                                continuation.resume("User does not exist")
+                            }
+                            is FirebaseAuthInvalidCredentialsException -> {
+                                // Invalid email/password, handle accordingly
+                                continuation.resume("Invalid email/password")
+                            }
+                            else -> {
+                                // Other exception, handle accordingly
+                                // If sign in fails, display a message to the user.
+                                Log.w(TAG, "LoginUserWithEmail:failure", task.exception)
+                                throw throw Exception(
+                                    "LoginUserWithEmail: $email failure",
+                                    task.exception
+                                )
+                            }
+                        }
                     }
                 }
         }
     }
+
 }
