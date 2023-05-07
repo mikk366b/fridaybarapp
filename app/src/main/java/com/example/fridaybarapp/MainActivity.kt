@@ -316,6 +316,9 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
             if (mSelectedText == mScreens[2]){
                 MapScreen()
             }
+            if (mSelectedText == mScreens[3]){
+                BarCrawlScreen(response)
+            }
         }
 
 
