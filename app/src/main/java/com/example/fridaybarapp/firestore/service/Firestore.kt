@@ -147,7 +147,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                     continuation.resume(documentReference)
                 }
                 .addOnFailureListener { e ->
-                    Log.w(TAG, "Error adding document", e)
+                    Log.w(TAG, "Error deleting document", e)
                     throw e
                 }
         }
