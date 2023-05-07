@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.fridaybarapp'
+    namespace 'com.barbuddy.fridaybarapp'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.fridaybarapp"
+        applicationId "com.barbuddy.fridaybarapp"
         minSdk 29
         targetSdk 33
         versionCode 1
