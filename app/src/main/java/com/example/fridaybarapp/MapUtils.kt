@@ -105,10 +105,11 @@ enum class PermissionState {
     GRANTED, // Permission granted
     DENIED // Permission denied
 }
-@OptIn(ExperimentalPermissionsApi::class)
+//@OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun MapScreen() {
+
     val context = LocalContext.current
     val geocodehelper = GeocodeHelper(apiKey = apiKey, context = context)
     val fusedLocationClient: FusedLocationProviderClient =
@@ -127,10 +128,97 @@ fun MapScreen() {
             permissionState.value = PermissionState.DENIED
         }
     }
+    val mapReadyState = remember { mutableStateOf(false) }
+
+    // Define the updateUserLocation function here
+    fun updateUserLocation(map: GoogleMap, location: Location) {
+        val latLng = LatLng(location.latitude, location.longitude)
+        currentLocationState.value = location
+
+        if (currentLocationMarkerState.value == null) {
+            val marker = geocodehelper.addMarker(
+                map,
+                latLng,
+                "Current Location",
+                "test",
+                markerColor = BitmapDescriptorFactory.HUE_GREEN
+            )
+            currentLocationMarkerState.value = marker
+        } else {
+            currentLocationMarkerState.value?.position = latLng
+        }
+
+    }
+
+    LaunchedEffect(permissionState.value, mapReadyState.value) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                ACCESS_FINE_LOCATION
+            ) == PERMISSION_GRANTED
+        ) {
+            // Access to the location is already granted
+            try {
+                val locationRequest = LocationRequest.create().apply {
+                    priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                    interval = 5000 // Update location every 5 seconds
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    context,
+                    "Failed to get current location, location already provided",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            // Request access to the location
+            when (permissionState.value) {
+                PermissionState.IDLE -> {
+                    requestPermissionLauncher.launch(ACCESS_FINE_LOCATION)
+                }
+                PermissionState.GRANTED -> {
+                    // Permission has been granted by the user
+                    try {
+                        val location = fusedLocationClient.lastLocation.await()
+                        currentLocationState.value = location
+                    } catch (e: Exception) {
+                        Toast.makeText(
+                            context,
+                            "Failed to get current location",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                PermissionState.DENIED -> {
+                    // Permission has been denied by the user
+                    Toast.makeText(
+                        context,
+                        "Location access is required to use this feature",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+    fun findClosestPoint(userLocation: LatLng, points: List<LatLng>): LatLng {
+        var closestPoint = points[0]
+        var smallestDistance = Float.MAX_VALUE
+
+        for (point in points) {
+            val distance = FloatArray(1)
+            Location.distanceBetween(userLocation.latitude, userLocation.longitude, point.latitude, point.longitude, distance)
+            if (distance[0] < smallestDistance) {
+                smallestDistance = distance[0]
+                closestPoint = point
+            }
+        }
+
+        return closestPoint
+    }
     val markerLatLngMap = remember { mutableMapOf<Marker, LatLng>() }
     val context2 = LocalContext.current
     val currentRoute = remember { mutableStateOf<Polyline?>(null) }
     val mapView = rememberMapViewWithLifecycle()
+
     Scaffold {
         AndroidView({ mapView }) { mapView ->
             coroutineScope.launch {
@@ -193,6 +281,7 @@ fun MapScreen() {
                 }
 
                 // Request location permission and get the user's current location
+
                 if (ContextCompat.checkSelfPermission(
                         context,
                         ACCESS_FINE_LOCATION
@@ -200,7 +289,6 @@ fun MapScreen() {
                 ) {
                     // Access to the location is already granted
                     try {
-
                         val locationRequest = LocationRequest.create().apply {
                             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
                             interval = 5000 // Update location every 5 seconds
@@ -209,22 +297,9 @@ fun MapScreen() {
                         val locationCallback = object : LocationCallback() {
                             override fun onLocationResult(locationResult: LocationResult?) {
                                 locationResult?.lastLocation?.let { location ->
+                                    updateUserLocation(map, location)
                                     val latLng = LatLng(location.latitude, location.longitude)
                                     currentLocationState.value = location
-
-                                    if (currentLocationMarkerState.value == null) {
-                                        val marker = geocodehelper.addMarker(
-                                            map,
-                                            latLng,
-                                            "Current Location",
-                                            "test",
-                                            markerColor = BitmapDescriptorFactory.HUE_GREEN
-                                        )
-                                        currentLocationMarkerState.value = marker
-                                    } else {
-                                        currentLocationMarkerState.value?.position = latLng
-                                    }
-
                                     val clickedMarker = selectedMarkerState.value
                                     if (clickedMarker != null) {
                                         val destination = markerLatLngMap[clickedMarker]
@@ -236,12 +311,14 @@ fun MapScreen() {
                                                     val polylineOptions = PolylineOptions().addAll(directionsResult).color(Color.BLUE)
                                                     val polyline = map.addPolyline(polylineOptions)
                                                     currentRoute.value = polyline
+
                                                 } else {
                                                     Toast.makeText(context, "Failed to get directions", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                         }
                                     }
+                                    updateUserLocation(map, location)
                                 }
                             }
                         }
