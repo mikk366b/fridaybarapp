@@ -129,9 +129,24 @@ fun MapScreen() {
         }
     }
     val mapReadyState = remember { mutableStateOf(false) }
+    fun findClosestPoint(userLocation: LatLng, points: List<LatLng>): LatLng {
+        var closestPoint = points[0]
+        var smallestDistance = Float.MAX_VALUE
+
+        for (point in points) {
+            val distance = FloatArray(1)
+            Location.distanceBetween(userLocation.latitude, userLocation.longitude, point.latitude, point.longitude, distance)
+            if (distance[0] < smallestDistance) {
+                smallestDistance = distance[0]
+                closestPoint = point
+            }
+        }
+
+        return closestPoint
+    }
 
     // Define the updateUserLocation function here
-    fun updateUserLocation(map: GoogleMap, location: Location) {
+    fun updateUserLocation(map: GoogleMap, location: Location, currentRoute: MutableState<Polyline?>, markerLatLngMap: MutableMap<Marker, LatLng>) {
         val latLng = LatLng(location.latitude, location.longitude)
         currentLocationState.value = location
 
@@ -140,14 +155,28 @@ fun MapScreen() {
                 map,
                 latLng,
                 "Current Location",
-                "test",
                 markerColor = BitmapDescriptorFactory.HUE_GREEN
             )
             currentLocationMarkerState.value = marker
         } else {
             currentLocationMarkerState.value?.position = latLng
         }
-
+        val clickedMarker = selectedMarkerState.value
+        if (clickedMarker != null) {
+            val destination = markerLatLngMap[clickedMarker]
+            if (destination != null) {
+                currentRoute.value?.let { polyline ->
+                    val polylinePoints = polyline.points
+                    if (polylinePoints.isNotEmpty()) {
+                        val closestPoint = findClosestPoint(latLng, polylinePoints)
+                        if (closestPoint != polylinePoints.first()) {
+                            val updatedPoints = polylinePoints.subList(polylinePoints.indexOf(closestPoint), polylinePoints.size)
+                            currentRoute.value?.points = updatedPoints
+                        }
+                    }
+                }
+            }
+        }
     }
 
     LaunchedEffect(permissionState.value, mapReadyState.value) {
@@ -199,21 +228,7 @@ fun MapScreen() {
             }
         }
     }
-    fun findClosestPoint(userLocation: LatLng, points: List<LatLng>): LatLng {
-        var closestPoint = points[0]
-        var smallestDistance = Float.MAX_VALUE
 
-        for (point in points) {
-            val distance = FloatArray(1)
-            Location.distanceBetween(userLocation.latitude, userLocation.longitude, point.latitude, point.longitude, distance)
-            if (distance[0] < smallestDistance) {
-                smallestDistance = distance[0]
-                closestPoint = point
-            }
-        }
-
-        return closestPoint
-    }
     val markerLatLngMap = remember { mutableMapOf<Marker, LatLng>() }
     val context2 = LocalContext.current
     val currentRoute = remember { mutableStateOf<Polyline?>(null) }
@@ -240,34 +255,49 @@ fun MapScreen() {
 
                         if (location != null) {
                             val latLng = location
-                            val marker = geocodehelper.addMarker(map, latLng, name, "test")
+                            val marker = geocodehelper.addMarker(map, latLng, name)
                             markerLatLngMap[marker] = latLng
-                            val marker2 = geocodehelper.addMarker(map,googleplexcoord , "googleplextest", "test")
-                            markerLatLngMap[marker2] = googleplexcoord
 
                             map.setOnMarkerClickListener { clickedMarker ->
-                                currentRoute.value?.remove()
+                                if (selectedMarkerState.value != clickedMarker) {
+                                    currentRoute.value?.remove()
+                                    currentRoute.value = null
+                                    selectedMarkerState.value = clickedMarker
+                                }
+
                                 val destination = markerLatLngMap[clickedMarker]
                                 if (destination != null) {
                                     val origin = currentLocationState.value
                                     if (origin != null) {
                                         val originLatLng = LatLng(origin.latitude, origin.longitude)
                                         coroutineScope.launch {
-                                            val directionsResult = geocodehelper.getDirections(originLatLng, destination)
+                                            val directionsResult = geocodehelper.getDirections(
+                                                originLatLng,
+                                                destination
+                                            )
                                             if (directionsResult != null) {
-                                                val polylineOptions = PolylineOptions().addAll(directionsResult).color(Color.BLUE)
+                                                val polylineOptions =
+                                                    PolylineOptions().addAll(directionsResult)
+                                                        .color(Color.BLUE)
                                                 val polyline = map.addPolyline(polylineOptions)
                                                 currentRoute.value = polyline
-
                                             } else {
-                                                Toast.makeText(context, "Failed to get directions", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to get directions",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                         }
                                     } else {
-                                        Toast.makeText(context, "Current location not available", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Current location not available",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
-                                marker.showInfoWindow()
+                                clickedMarker.showInfoWindow()
                                 return@setOnMarkerClickListener false
                             }
 
@@ -297,7 +327,7 @@ fun MapScreen() {
                         val locationCallback = object : LocationCallback() {
                             override fun onLocationResult(locationResult: LocationResult?) {
                                 locationResult?.lastLocation?.let { location ->
-                                    updateUserLocation(map, location)
+                                    updateUserLocation(map, location, currentRoute, markerLatLngMap)
                                     val latLng = LatLng(location.latitude, location.longitude)
                                     currentLocationState.value = location
                                     val clickedMarker = selectedMarkerState.value
@@ -318,7 +348,7 @@ fun MapScreen() {
                                             }
                                         }
                                     }
-                                    updateUserLocation(map, location)
+                                    updateUserLocation(map, location, currentRoute, markerLatLngMap)
                                 }
                             }
                         }
@@ -454,11 +484,10 @@ class GeocodeHelper(private val context: android.content.Context, private val ap
         }
     }
 
-    fun addMarker(map: GoogleMap, latLng: LatLng, title: String, snippet: String, markerColor: Float? = null): Marker {
+    fun addMarker(map: GoogleMap, latLng: LatLng, title: String, markerColor: Float? = null): Marker {
         val markerOptions = MarkerOptions()
             .position(latLng)
             .title(title)
-            .snippet(snippet)
 
         if (markerColor != null) {
             markerOptions.icon(BitmapDescriptorFactory.defaultMarker(markerColor))
