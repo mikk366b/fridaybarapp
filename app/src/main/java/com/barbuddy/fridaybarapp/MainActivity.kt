@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
 import com.barbuddy.fridaybarapp.components.authentication.SignupLogin
 import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.ui.theme.FridaybarappTheme
@@ -85,20 +87,10 @@ fun makeNetworkRequesttest(): String? {
 }
 
 @Composable
-fun Bars(response: String) {
+fun Bars(bars: MutableList<JSONObject>) {
     var viewDetails by remember { mutableStateOf(false) }
-    var lastClicked = remember {
-        mutableStateOf("")
-    }
-    var bars = remember { mutableStateOf(mutableListOf<JSONObject>()) }
-    LaunchedEffect(Unit) {
-        val JSONbars = makeNetworkRequestJSON()
-        if (JSONbars != null) {
-            for (i in 0 until JSONbars.length()) {
-                bars.value.add(JSONbars.getJSONObject(i))
-            }
-        }
-    }
+    var lastClicked by remember { mutableStateOf("") }
+
     if (!viewDetails) {
         Image(
             painter = painterResource(id = R.drawable.krone),
@@ -132,12 +124,12 @@ fun Bars(response: String) {
         }
 
         //Text(text = response)
-        Log.v("JSON response før", response)
-        val parts = response.lines()
+        //Log.v("JSON response før", response)
+        //val parts = response.lines()
 
         if (bars != null) {
-            for (i in 0 until bars.value.size) {
-                val bar = bars.value[i]
+            for (i in 0 until bars.size) {
+                val bar = bars[i]
                 Spacer(modifier = Modifier.height(12.dp))
                 Card(
                     Modifier
@@ -146,7 +138,7 @@ fun Bars(response: String) {
                         .offset(x = 10.dp)
                         .clickable {
                             viewDetails = !viewDetails
-                            lastClicked.value = bar.getString("name")
+                            lastClicked = bar.getString("name")
                         },
                     shape = RoundedCornerShape(20),
                     backgroundColor = Color(0xFF000000),
@@ -156,9 +148,6 @@ fun Bars(response: String) {
                         CustomText(data = bar.getString("name"), fontSize = 25)
                         CustomText(data = bar.getString("address"), fontSize = 15)
                     }
-                    Row {
-
-                    }
                 }
             }
         }
@@ -166,9 +155,9 @@ fun Bars(response: String) {
         //Individuel bar side
         var currentBar: JSONObject? = null
         if (bars != null) {
-            for (i in 0 until bars.value.size) {
-                val bar = bars.value[i]
-                if (bar.getString("name") == lastClicked.value) {
+            for (i in 0 until bars.size) {
+                val bar = bars[i]
+                if (bar.getString("name") == lastClicked) {
                     currentBar = bar
                 }
             }
@@ -214,13 +203,22 @@ fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
 
 @Composable
 fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
+    var bars = remember { mutableListOf<JSONObject>() }
+    LaunchedEffect(Unit) {
+        val JSONbars = makeNetworkRequestJSON()
+        if (JSONbars != null) {
+            for (i in 0 until JSONbars.length()) {
+                bars.add(JSONbars.getJSONObject(i))
+            }
+        }
+    }
     var response by remember { mutableStateOf("") }
     // Declaring a boolean value to store
     // the expanded state of the Text Field
     var mExpanded by remember { mutableStateOf(false) }
 
     // Create a list of cities
-    val mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl")
+    val mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl", "Favorites")
 
     // Create a string value to store the selected city
     var mSelectedText by remember { mutableStateOf(mScreens[1]) }
@@ -283,16 +281,29 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 expanded = mExpanded,
                 onDismissRequest = { mExpanded = false },
                 modifier = Modifier
-                    .width(200.dp)
-                    //.border(width = 1.dp, color = Color(0xFF337800))
-                    .background(color = Color(0xFFB9CDFF))
+                    .width(300.dp)
+                    .border(width = 3.dp, color = Color(0xFF000000), shape = RoundedCornerShape(3))
+                    .background(color = Color(0xFF014C05)),
             ) {
                 mScreens.forEach { label ->
                     DropdownMenuItem(onClick = {
                         mSelectedText = label
                         mExpanded = false
-                    }) {
-                        Text(text = label, style = TextStyle(color = Color.Black, fontSize = 20.sp))
+                    }, modifier = Modifier.sizeIn(minHeight = 80.dp),
+                        contentPadding = PaddingValues(0.dp)) {
+                        Text(text = label,
+                            modifier = Modifier
+                                .border(1.5.dp, color = Color(0xFFF5B633))
+                                .fillMaxWidth()
+                                .background(color = Color(0xFFB90000))
+                                .offset(y = -(3).dp),
+                            lineHeight = 5.sp,
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                                shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f),
+                                textDecoration = TextDecoration.Underline,
+                                textIndent = TextIndent(firstLine = 15.sp)
+                            ))
                     }
                 }
             }
@@ -308,7 +319,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 SignupLogin(service)
             }
             if (mSelectedText == mScreens[1]) {
-                Bars(response)
+                Bars(bars)
             }
             if (mSelectedText == mScreens[2]){
                 MapScreen()
