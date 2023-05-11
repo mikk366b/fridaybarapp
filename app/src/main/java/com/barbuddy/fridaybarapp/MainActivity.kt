@@ -1,28 +1,20 @@
-package com.example.fridaybarapp
+package com.barbuddy.fridaybarapp
 
-import android.annotation.SuppressLint
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.res.painterResource
@@ -31,17 +23,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import com.example.fridaybarapp.firestore.service.FireStore
-import com.example.fridaybarapp.ui.theme.FridaybarappTheme
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
+import com.barbuddy.fridaybarapp.components.GetBars
+import com.barbuddy.fridaybarapp.components.authentication.SignupLogin
+import com.barbuddy.fridaybarapp.components.getCrawls
+import com.barbuddy.fridaybarapp.firestore.service.FireStore
+import com.barbuddy.fridaybarapp.ui.theme.FridaybarappTheme
 import kotlinx.coroutines.Dispatchers
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import com.example.fridaybarapp.ui.theme.FridaybarappTheme
 import com.google.android.libraries.maps.GoogleMap
@@ -50,28 +43,23 @@ import com.google.android.libraries.maps.model.LatLng
 import com.google.android.libraries.maps.model.MarkerOptions
 import io.ktor.http.cio.*
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
-
-import kotlin.math.log
-import com.google.android.libraries.maps.CameraUpdate
-import com.google.android.libraries.maps.CameraUpdateFactory
-import com.google.android.libraries.maps.model.PolylineOptions
-import com.google.maps.android.ktx.awaitMap
-import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val auth = Firebase.auth
+        FirebaseApp.initializeApp(this);
+        val db = FirebaseFirestore.getInstance()
+        val service = FireStore(db, auth)
         setContent {
             FridaybarappTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF014C2D)) {
-                    NetworkResponseUI()
+                    NetworkResponseUI(db, service)
 
                 }
             }
@@ -83,7 +71,6 @@ class MainActivity : ComponentActivity() {
 fun Greeting(name: String) {
     Text(text = "Hello $name! Hej Igen")
 }
-
 
 @Composable
 fun DefaultPreview() {
@@ -109,15 +96,18 @@ fun makeNetworkRequesttest(): String? {
 }
 
 @Composable
-fun Bars(response: String) {
+fun Bars(bars: MutableList<JSONObject>) {
     var viewDetails by remember { mutableStateOf(false) }
-    if(!viewDetails) {
+    var lastClicked by remember { mutableStateOf("") }
+
+    if (!viewDetails) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ){
-        Image(painter = painterResource(id = R.drawable.krone),
+        Image(
+            painter = painterResource(id = R.drawable.krone),
             modifier = Modifier
                 .height(80.dp)
                 .fillMaxWidth(),
@@ -128,93 +118,121 @@ fun Bars(response: String) {
             Modifier
                 .fillMaxWidth()
                 .height(2.dp)
-                .background(Color(0xFFCAA800))){
+                .background(Color(0xFFCAA800))
+        ) {
         }
         Row(
             Modifier
                 .height(35.dp)
                 .fillMaxWidth()
-                .background(Color(0xFFB90000))) {
-            Text(text = "List of friday bars", Modifier.offset(x = 10.dp, y = -(2).dp),
-                style = TextStyle(color = Color(0xFFFFF0D2),
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f)
-                ))
+                .background(Color(0xFFB90000))
+        ) {
+            CustomText(data = "List of friday bars", fontSize = 25, Modifier.offset(x = 10.dp, y = -(2).dp))
         }
         Row(
             Modifier
                 .fillMaxWidth()
                 .height(2.dp)
-                .background(Color(0xFFCAA800))){
+                .background(Color(0xFFCAA800))
+        ) {
         }
 
         //Text(text = response)
-        Log.v("JSON response før", response)
-        val parts = response.lines()
-        for (i in 0..8) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(
-                Modifier
-                    .height(80.dp)
-                    .width(390.dp)
-                    .offset(x = 10.dp)
-                    .clickable { viewDetails = !viewDetails },
-                shape = RoundedCornerShape(20),
-                backgroundColor = Color(0xFF000000),
-                border = BorderStroke(2.dp, color = Color(0xFFA36D00))) {
-                Column {
-                    Text(
-                        text = "Approksimerbar",
-                        Modifier.offset(x = 10.dp, y = 2.dp),
-                        style = TextStyle(
-                            color = Color(0xFFFFF0D2),
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            shadow = Shadow(
-                                color = Color(0xFFE70000),
-                                offset = Offset(x = 5f, y = 4f),
-                                blurRadius = 2f
-                            )
-                        )
-                    )
-                    Text(
-                        text = "Adresse",
-                        Modifier.offset(x = 10.dp, y = 2.dp),
-                        style = TextStyle(
-                            color = Color(0xFFFFF0D2),
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            shadow = Shadow(
-                                color = Color(0xFFE70000),
-                                offset = Offset(x = 5f, y = 4f),
-                                blurRadius = 2f
-                            )
-                        )
-                    )
-                }}
-                Row {
+        //Log.v("JSON response før", response)
+        //val parts = response.lines()
 
+        if (bars != null) {
+            for (i in 0 until bars.size) {
+                val bar = bars[i]
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    Modifier
+                        .height(80.dp)
+                        .width(390.dp)
+                        .offset(x = 10.dp)
+                        .clickable {
+                            viewDetails = !viewDetails
+                            lastClicked = bar.getString("name")
+                        },
+                    shape = RoundedCornerShape(20),
+                    backgroundColor = Color(0xFF000000),
+                    border = BorderStroke(2.dp, color = Color(0xFFA36D00))
+                ) {
+                    Column(Modifier.padding(15.dp)) {
+                        CustomText(data = bar.getString("name"), fontSize = 25)
+                        CustomText(data = bar.getString("address"), fontSize = 15)
+                    }
                 }
             }
         }
+    } else {
+        //Individuel bar side
+        var currentBar: JSONObject? = null
+        if (bars != null) {
+            for (i in 0 until bars.size) {
+                val bar = bars[i]
+                if (bar.getString("name") == lastClicked) {
+                    currentBar = bar
+                }
+            }
+
+            if (currentBar != null) {
+
+                Column(Modifier.padding(10.dp)) {
+                    CustomText(data = currentBar.getString("name"), fontSize = 25)
+                    CustomText(data = currentBar.getString("address"), fontSize = 15)
+                }
+
+                Icon(
+                    Icons.Filled.ArrowBack,
+                    "contentDescription",
+                    Modifier.clickable { viewDetails = !viewDetails })
+            }
+            else{
+                //Burde ikke nå hertil, men bare for at være sikker
+                viewDetails = !viewDetails
+            }
+
+        }
     }
-    else {
-        Text(text = "Approksimerbar")
-        Icon(Icons.Filled.ArrowBack, "contentDescription", Modifier.clickable { viewDetails = !viewDetails })
-    }
+}
+@Composable
+fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
+{
+    Text(
+        text = data,
+        modifier = modifier,
+        style = TextStyle(
+            color = Color(0xFFFFF0D2),
+            fontSize = fontSize.sp,
+            fontWeight = FontWeight.SemiBold,
+            shadow = Shadow(
+                color = Color(0xFFE70000),
+                offset = Offset(x = 5f, y = 4f),
+                blurRadius = 2f
+            )
+        )
+    )
 }
 
 @Composable
-fun NetworkResponseUI() {
+fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
+    var bars = remember { mutableListOf<JSONObject>() }
+    LaunchedEffect(Unit) {
+        val JSONbars = makeNetworkRequestJSON()
+        if (JSONbars != null) {
+            for (i in 0 until JSONbars.length()) {
+                bars.add(JSONbars.getJSONObject(i))
+            }
+        }
+    }
     var response by remember { mutableStateOf("") }
-
     // Declaring a boolean value to store
     // the expanded state of the Text Field
     var mExpanded by remember { mutableStateOf(false) }
 
     // Create a list of cities
-    val mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl")
+    var mScreens = listOf("Log in/Sign up", "Bars", "Map", "Bar crawl", "Favorites")
 
     // Create a string value to store the selected city
     var mSelectedText by remember { mutableStateOf(mScreens[1]) }
@@ -277,16 +295,29 @@ fun NetworkResponseUI() {
                 expanded = mExpanded,
                 onDismissRequest = { mExpanded = false },
                 modifier = Modifier
-                    .width(200.dp)
-                    //.border(width = 1.dp, color = Color(0xFF337800))
-                    .background(color = Color(0xFFB9CDFF))
+                    .width(300.dp)
+                    .border(width = 3.dp, color = Color(0xFF000000), shape = RoundedCornerShape(3))
+                    .background(color = Color(0xFF014C05)),
             ) {
                 mScreens.forEach { label ->
                     DropdownMenuItem(onClick = {
                         mSelectedText = label
                         mExpanded = false
-                    }) {
-                        Text(text = label, style = TextStyle(color = Color.Black, fontSize = 20.sp))
+                    }, modifier = Modifier.sizeIn(minHeight = 80.dp),
+                        contentPadding = PaddingValues(0.dp)) {
+                        Text(text = label,
+                            modifier = Modifier
+                                .border(1.5.dp, color = Color(0xFFF5B633))
+                                .fillMaxWidth()
+                                .background(color = Color(0xFFB90000))
+                                .offset(y = -(3).dp),
+                            lineHeight = 5.sp,
+                            style = TextStyle(
+                                color = Color(0xFFFFF0D2), fontSize = 30.sp, fontWeight = FontWeight.SemiBold,
+                                shadow = Shadow(color = Color(0xFF000000), offset = Offset(x = 2f, y = 2f), blurRadius = 1f),
+                                textDecoration = TextDecoration.Underline,
+                                textIndent = TextIndent(firstLine = 15.sp)
+                            ))
                     }
                 }
             }
@@ -298,11 +329,20 @@ fun NetworkResponseUI() {
                 .background(Color(0xFFCAA800))){
         }
         Column(Modifier.offset(y = 0.dp)) {
+            if (mSelectedText == mScreens[0]){
+                SignupLogin(service)
+            }
             if (mSelectedText == mScreens[1]) {
-                Bars(response)
+                Bars(bars)
             }
             if (mSelectedText == mScreens[2]){
                 MapScreen()
+            }
+            if (mSelectedText == mScreens[3]){
+                getCrawls(service)
+            }
+            if (mSelectedText == mScreens[4]){
+                GetBars(service)
             }
         }
 

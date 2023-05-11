@@ -1,4 +1,4 @@
-package com.example.fridaybarapp
+package com.barbuddy.fridaybarapp
 
 import org.junit.Test
 

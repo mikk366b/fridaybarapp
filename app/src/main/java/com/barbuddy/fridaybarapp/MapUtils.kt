@@ -1,10 +1,13 @@
-package com.example.fridaybarapp
+package com.barbuddy.fridaybarapp
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Bundle
 import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
@@ -16,6 +19,8 @@ import com.google.android.libraries.maps.CameraUpdateFactory
 import com.google.android.libraries.maps.GoogleMap
 import com.google.android.libraries.maps.MapView
 import com.google.maps.DirectionsApi
+import com.google.android.libraries.maps.model.LatLng
+import com.google.android.libraries.maps.model.MarkerOptions
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
 import com.google.maps.android.ktx.awaitMap

@@ -1,4 +1,4 @@
-package com.example.fridaybarapp.ui.theme
+package com.barbuddy.fridaybarapp.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme

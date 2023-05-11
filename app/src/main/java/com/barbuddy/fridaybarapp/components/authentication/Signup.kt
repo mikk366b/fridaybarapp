@@ -1,4 +1,4 @@
-package com.example.fridaybarapp.components.authentication
+package com.barbuddy.fridaybarapp.components.authentication
 
 
 import androidx.compose.foundation.layout.Column
@@ -13,11 +13,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import com.example.fridaybarapp.firestore.service.FireStore
+import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import kotlinx.coroutines.launch
 
 @Composable
-fun Login(service: FireStore, nav: NavController) {
+fun Signup(service:FireStore,nav: NavController) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -36,11 +36,11 @@ fun Login(service: FireStore, nav: NavController) {
         }
         Button(onClick = {
             scope.launch {
-                val user = service.login(email.value, password.value)
-                nav.navigate("Horses")
+                val user=service.signup(email.value,password.value)
+                nav.navigate("CreateBar")
             }
         }) {
-            Text("Login")
+            Text("Signup")
         }
     }
 }
