@@ -30,7 +30,7 @@ fun CreateCrawls(service: FireStore, nav: NavController) {
         }
         Button(onClick = {
             scope.launch {
-                service.createCrawl(crawlId.value,name.value)
+                service.createCrawl(crawlId.value, name.value) // mutableListOf<String>() + name.value
                 //nav.navigate("Horses")
             }
         }) {
