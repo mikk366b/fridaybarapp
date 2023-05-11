@@ -1,5 +1,7 @@
 package com.barbuddy.fridaybarapp
 
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
@@ -11,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -24,42 +25,28 @@ import com.google.android.libraries.maps.model.MarkerOptions
 import com.google.maps.GeoApiContext
 import com.google.maps.GeocodingApi
 import com.google.maps.android.ktx.awaitMap
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.provider.ContactsContract.CommonDataKinds.Website.URL
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.MultiplePermissionsState
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.android.gms.common.api.ResolvableApiException
+import com.barbuddy.fridaybarapp.R
 import com.google.android.gms.location.*
 
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.libraries.maps.model.*
 import com.google.maps.errors.ApiException
-import com.google.maps.internal.PolylineEncoding
 import com.google.maps.model.DirectionsResult
 import com.google.maps.model.TravelMode
 
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URL
@@ -235,9 +222,9 @@ fun MapScreen() {
     }
 
     val markerLatLngMap = remember { mutableMapOf<Marker, LatLng>() }
-    val context2 = LocalContext.current
     val currentRoute = remember { mutableStateOf<Polyline?>(null) }
     val mapView = rememberMapViewWithLifecycle()
+    val routeMutex = remember { Mutex() }
 
     Scaffold {
         AndroidView({ mapView }) { mapView ->
@@ -246,7 +233,6 @@ fun MapScreen() {
                 map.uiSettings.isZoomControlsEnabled = true
                 val JSONbars = makeNetworkRequestJSON()
                 val bars = JSONbars
-                val googleplexcoord = LatLng(37.42106013828215, -122.08605307914131)
                 map.setOnMarkerClickListener { marker ->
                     marker.showInfoWindow()
                     true
@@ -264,47 +250,54 @@ fun MapScreen() {
                             markerLatLngMap[marker] = latLng
 
                             map.setOnMarkerClickListener { clickedMarker ->
-                                if (selectedMarkerState.value != clickedMarker) {
-                                    currentRoute.value?.remove()
-                                    currentRoute.value = null
-                                    selectedMarkerState.value = clickedMarker
-                                }
+                                coroutineScope.launch {
+                                    routeMutex.withLock {
+                                        if (selectedMarkerState.value != clickedMarker) {
+                                            // Remove the existing route if there's one
+                                            currentRoute.value?.remove()
+                                            currentRoute.value = null
+                                            selectedMarkerState.value = clickedMarker
+                                        }
 
-                                val destination = markerLatLngMap[clickedMarker]
-                                if (destination != null) {
-                                    val origin = currentLocationState.value
-                                    if (origin != null) {
-                                        val originLatLng = LatLng(origin.latitude, origin.longitude)
-                                        coroutineScope.launch {
-                                            val directionsResult = geocodehelper.getDirections(
-                                                originLatLng,
-                                                destination
-                                            )
-                                            if (directionsResult != null) {
-                                                val polylineOptions =
-                                                    PolylineOptions().addAll(directionsResult)
-                                                        .color(Color.BLUE)
-                                                val polyline = map.addPolyline(polylineOptions)
-                                                currentRoute.value = polyline
+                                        val destination = markerLatLngMap[clickedMarker]
+                                        if (destination != null) {
+                                            val origin = currentLocationState.value
+                                            if (origin != null) {
+                                                val originLatLng = LatLng(origin.latitude, origin.longitude)
+                                                val directionsResult = geocodehelper.getDirections(
+                                                    originLatLng,
+                                                    destination
+                                                )
+                                                if (directionsResult != null) {
+                                                    // Remove the existing route if there's one
+                                                    currentRoute.value?.remove()
+
+                                                    val polylineOptions =
+                                                        PolylineOptions().addAll(directionsResult)
+                                                            .color(Color.BLUE)
+                                                    val polyline = map.addPolyline(polylineOptions)
+                                                    currentRoute.value = polyline
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Failed to get directions",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             } else {
                                                 Toast.makeText(
                                                     context,
-                                                    "Failed to get directions",
+                                                    "Current location not available",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
                                             }
                                         }
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Current location not available",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        clickedMarker.showInfoWindow()
                                     }
                                 }
-                                clickedMarker.showInfoWindow()
                                 return@setOnMarkerClickListener false
                             }
+                                }
 
 
 
@@ -313,7 +306,6 @@ fun MapScreen() {
                             }
                         }
                     }
-                }
 
                 // Request location permission and get the user's current location
 

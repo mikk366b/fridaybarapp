@@ -1,7 +1,6 @@
 package com.barbuddy.fridaybarapp
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
@@ -35,13 +34,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
-import com.example.fridaybarapp.ui.theme.FridaybarappTheme
-import com.google.android.libraries.maps.GoogleMap
-import com.google.android.libraries.maps.MapView
-import com.google.android.libraries.maps.model.LatLng
-import com.google.android.libraries.maps.model.MarkerOptions
-import io.ktor.http.cio.*
+import com.barbuddy.fridaybarapp.R
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -164,8 +157,7 @@ fun Bars(bars: MutableList<JSONObject>) {
                     }
                 }
             }
-        }
-    } else {
+        } else {
         //Individuel bar side
         var currentBar: JSONObject? = null
         if (bars != null) {
@@ -195,6 +187,8 @@ fun Bars(bars: MutableList<JSONObject>) {
 
         }
     }
+ }
+}
 }
 @Composable
 fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
