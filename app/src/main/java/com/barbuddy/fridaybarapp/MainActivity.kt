@@ -35,7 +35,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.barbuddy.fridaybarapp.R
-import com.example.fridaybarapp.BarCrawlScreen
+import com.barbuddy.fridaybarapp.BarCrawlScreen
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -394,7 +394,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 MapScreen()
             }
             if (mSelectedText == mScreens[3]){
-                BarCrawlScreen()
+                BarCrawlScreen(response, service)
             }
             if (mSelectedText == mScreens[4]){
                 GetBars(service)

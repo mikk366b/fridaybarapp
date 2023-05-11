@@ -1,4 +1,5 @@
-package com.example.fridaybarapp
+package com.barbuddy.fridaybarapp
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,13 +9,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import com.barbuddy.fridaybarapp.CustomText
+import com.barbuddy.fridaybarapp.components.getCrawls
 import org.json.JSONObject
 import com.barbuddy.fridaybarapp.makeNetworkRequestJSON
+import com.barbuddy.fridaybarapp.firestore.service.FireStore
+import com.barbuddy.fridaybarapp.firestore.service.Crawl
+import kotlinx.coroutines.launch
 
 @Composable
-fun BarCrawlScreen() {
+fun BarCrawlScreen(response: String, service: FireStore) {
+    val name = remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val bars = remember { mutableStateListOf<JSONObject>() }
+    var listOfBarCrawls = remember {mutableListOf<String>()}
 
     LaunchedEffect(Unit) {
         val JSONbars = makeNetworkRequestJSON()
@@ -32,16 +44,62 @@ fun BarCrawlScreen() {
             bars.shuffle()
             randomizedBars.clear()
             randomizedBars.addAll(bars.subList(0, 3))
+            for (bar in randomizedBars) {
+                listOfBarCrawls.add(bar.getString("name"))
+            }
         },
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(8.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))
     ) {
         Text(text = "Create BarCrawl")
     }
 
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = {scope.launch {service.getAllCrawl()}},
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))
+        ) {
+            Text(text = "Get my Bar Crawls")
+        }
+
+        Button(
+            onClick = { if (!service.loggedIn) {
+                val message = "Please login to continue"
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                if( name.value != "") {
+                // Handle button click when user is logged in
+
+                scope.launch {
+                    //service.createCrawl(name.value,listOfBarCrawls)
+                    listOfBarCrawls.map { service.createCrawl(name.value,it) }
+                }
+            }
+                      else{
+                    Toast.makeText(context, "Enter a list name for this crawl", Toast.LENGTH_SHORT).show()
+                      }},
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))
+        ) {
+            Text(text = "Save Bar Crawl")
+        }
+        //Text("Name of BarCrawl list:")
+
+    }
+    Row(modifier = Modifier.fillMaxWidth()){
+        TextField(value = name.value, onValueChange = { newText -> name.value = newText })
+    }
+    // printing bars in cards
     if (randomizedBars.isNotEmpty()) {
         for (bar in randomizedBars) {
             val name = bar.getString("name")
