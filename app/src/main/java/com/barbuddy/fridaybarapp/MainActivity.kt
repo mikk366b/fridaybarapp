@@ -90,6 +90,7 @@ fun makeNetworkRequesttest(): String? {
 
 @Composable
 fun Bars(bars: MutableList<JSONObject>) {
+
     var viewDetails by remember { mutableStateOf(false) }
     var lastClicked by remember { mutableStateOf("") }
 
@@ -98,100 +99,159 @@ fun Bars(bars: MutableList<JSONObject>) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-        ){
-        Image(
-            painter = painterResource(id = R.drawable.krone),
-            modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth(),
-            contentDescription = null,
-            alignment = Alignment.Center
-        )
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(Color(0xFFCAA800))
         ) {
-        }
-        Row(
-            Modifier
-                .height(35.dp)
-                .fillMaxWidth()
-                .background(Color(0xFFB90000))
-        ) {
-            CustomText(data = "List of friday bars", fontSize = 25, Modifier.offset(x = 10.dp, y = -(2).dp))
-        }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(Color(0xFFCAA800))
-        ) {
-        }
+            Image(
+                painter = painterResource(id = R.drawable.krone),
+                modifier = Modifier
+                    .height(80.dp)
+                    .fillMaxWidth(),
+                contentDescription = null,
+                alignment = Alignment.Center
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFF000000))
+            ) {
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(Color(0xFFF0B432))
+            ) {
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFF000000))
+            ) {
+            }
+            Row(
+                Modifier
+                    .height(35.dp)
+                    .fillMaxWidth()
+                    .background(Color(0xFFB90000))
+            ) {
+                CustomText(
+                    data = "List of friday bars",
+                    fontSize = 25,
+                    Color(0xFF000000),
+                    Modifier.offset(x = 10.dp, y = -(2).dp),
+                )
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFF000000))
+            ) {
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(Color(0xFFF0B432))
+            ) {
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color(0xFF000000))
+            ) {
+            }
 
-        //Text(text = response)
-        //Log.v("JSON response før", response)
-        //val parts = response.lines()
+            //Text(text = response)
+            //Log.v("JSON response før", response)
+            //val parts = response.lines()
 
-        if (bars != null) {
-            for (i in 0 until bars.size) {
-                val bar = bars[i]
-                Spacer(modifier = Modifier.height(12.dp))
-                Card(
-                    Modifier
-                        .height(80.dp)
-                        .width(390.dp)
-                        .offset(x = 10.dp)
-                        .clickable {
-                            viewDetails = !viewDetails
-                            lastClicked = bar.getString("name")
-                        },
-                    shape = RoundedCornerShape(20),
-                    backgroundColor = Color(0xFF000000),
-                    border = BorderStroke(2.dp, color = Color(0xFFA36D00))
-                ) {
-                    Column(Modifier.padding(15.dp)) {
-                        CustomText(data = bar.getString("name"), fontSize = 25)
-                        CustomText(data = bar.getString("address"), fontSize = 15)
+            if (bars != null) {
+                for (i in 0 until bars.size) {
+                    val bar = bars[i]
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Card(
+                        Modifier
+                            .height(80.dp)
+                            .width(390.dp)
+                            .offset(x = 10.dp)
+                            .clickable {
+                                viewDetails = !viewDetails
+                                lastClicked = bar.getString("name")
+                            },
+                        shape = RoundedCornerShape(30),
+                        border = BorderStroke(2.dp, color = Color(0xFF000000)),
+                        backgroundColor = Color(0xFF9B7D41)
+                    ) {
+                        Card(
+                            Modifier.padding(4.dp),
+                            shape = RoundedCornerShape(28),
+                            backgroundColor = Color(0xFF000000),
+                            border = BorderStroke(0.dp, color = Color(0xFF9B7D41))
+                        ) {
+                            Column(Modifier.padding(3.dp)) {
+                                CustomText(
+                                    data = bar.getString("name"),
+                                    fontSize = 25,
+                                    Color(0xFFE70000),
+                                    Modifier.offset(x = 5.dp)
+                                )
+                                CustomText(
+                                    data = bar.getString("address").substringBefore(", Denmark"),
+                                    fontSize = 20,
+                                    Color(0xFFE70000),
+                                    Modifier.offset(x = 5.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
         } else {
-        //Individuel bar side
-        var currentBar: JSONObject? = null
-        if (bars != null) {
-            for (i in 0 until bars.size) {
-                val bar = bars[i]
-                if (bar.getString("name") == lastClicked) {
-                    currentBar = bar
-                }
-            }
-
-            if (currentBar != null) {
-
-                Column(Modifier.padding(10.dp)) {
-                    CustomText(data = currentBar.getString("name"), fontSize = 25)
-                    CustomText(data = currentBar.getString("address"), fontSize = 15)
+            //Individuel bar side
+            var currentBar: JSONObject? = null
+            if (bars != null) {
+                for (i in 0 until bars.size) {
+                    val bar = bars[i]
+                    if (bar.getString("name") == lastClicked) {
+                        currentBar = bar
+                    }
                 }
 
-                Icon(
-                    Icons.Filled.ArrowBack,
-                    "contentDescription",
-                    Modifier.clickable { viewDetails = !viewDetails })
-            }
-            else{
-                //Burde ikke nå hertil, men bare for at være sikker
-                viewDetails = !viewDetails
-            }
+                if (currentBar != null) {
 
+                    Column(Modifier.padding(10.dp)) {
+                        CustomText(
+                            data = currentBar.getString("name"),
+                            fontSize = 25,
+                            Color(0xFFE70000)
+                        )
+                        CustomText(
+                            data = currentBar.getString("address"),
+                            fontSize = 20,
+                            Color(0xFFE70000)
+                        )
+                    }
+
+                    Icon(
+                        Icons.Filled.ArrowBack,
+                        "contentDescription",
+                        Modifier.clickable { viewDetails = !viewDetails })
+                } else {
+                    //Burde ikke nå hertil, men bare for at være sikker
+                    viewDetails = !viewDetails
+                }
+
+            }
         }
     }
- }
-}
-}
+
+
 @Composable
-fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
+fun CustomText(data: String, fontSize: Int, shadowcolor: Color, modifier: Modifier = Modifier)
 {
     Text(
         text = data,
@@ -199,9 +259,9 @@ fun CustomText(data: String, fontSize: Int, modifier: Modifier = Modifier)
         style = TextStyle(
             color = Color(0xFFFFF0D2),
             fontSize = fontSize.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             shadow = Shadow(
-                color = Color(0xFFE70000),
+                color = shadowcolor,
                 offset = Offset(x = 5f, y = 4f),
                 blurRadius = 2f
             )
