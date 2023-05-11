@@ -23,6 +23,7 @@ import com.barbuddy.fridaybarapp.makeNetworkRequestJSON
 import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.firestore.service.Crawl
 import kotlinx.coroutines.launch
+import androidx.compose.ui.Alignment
 
 @Composable
 fun BarCrawlScreen(response: String, service: FireStore) {
@@ -44,7 +45,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
             }
         }
         val list = service.getAllCrawl()
-        Log.v("Tests barcrawls get",list.toString())
+        //Log.v("Tests barcrawls get",list.toString())
         if (list != null) {
             crawls.value = list
         }
@@ -114,11 +115,21 @@ fun BarCrawlScreen(response: String, service: FireStore) {
         //Text("Name of BarCrawl list:")
 
     }
-    Row(modifier = Modifier.fillMaxWidth()){
-        TextField(value = name.value, onValueChange = { newText -> name.value = newText }, placeholder={ Text("Enter bar crawls epic name") })
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically){
+        TextField(value = name.value, onValueChange = { newText -> name.value = newText }, placeholder={ Text("Enter bar crawl name") }
+        ,modifier = Modifier.fillMaxWidth(),colors = TextFieldDefaults.textFieldColors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = Color.Black),shape = RoundedCornerShape(16.dp))
     }
     // printing bars in cards
     if (randomizedBars.isNotEmpty() && createClicked.value) {
+        CustomText(
+            data = "Random Bar Crawl list",
+            fontSize = 25,
+            Color(0xFF000000),
+            Modifier.offset(x = 10.dp, y = -(2).dp),
+        )
         for (bar in randomizedBars) {
             val name = bar.getString("name")
             val address = bar.getString("address")
@@ -143,24 +154,31 @@ fun BarCrawlScreen(response: String, service: FireStore) {
         Column(modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())) {
+            CustomText(
+                data = "My Bar Crawls",
+                fontSize = 25,
+                Color(0xFF000000),
+                Modifier.offset(x = 10.dp, y = -(2).dp),
+            )
             crawls.value.map {
                 Card(
                     Modifier
-                        .height(80.dp)
                         .width(390.dp)
                         .offset(x = 10.dp),
                     shape = RoundedCornerShape(20),
                     backgroundColor = Color(0xFF000000),
                     border = BorderStroke(2.dp, color = Color(0xFFA36D00))
                 ) {
-                    Column() {
-                        Log.v("listst",it.toString())
-                        it.map{
-                            Row(modifier = Modifier.background(color = Color.Cyan)) {
-                                Row() {
-                                    Text("Bar: ")
-                                    Text(it.name)
-                                }
+                    Column(Modifier.padding(10.dp)) {
+                        //Log.v("listst",it.toString())
+                        CustomText(data = it.last().name, fontSize = 25, Color(0xFFE70000), )
+                        val temp = it.dropLast(1)
+                        temp.map{
+                            Row() {
+                                //CustomText(data = it.name, fontSize = 25, Color(0xFFE70000), )
+                                Column(Modifier.padding(5.dp)) {
+                                    CustomText(data = it.name, fontSize = 15, Color(0xFFE70000), )
+                            }
                             }
                         }
                     }

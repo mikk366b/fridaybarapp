@@ -107,19 +107,22 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 .get()
                 .addOnSuccessListener {
                     val test = it.get("crawls") as? Map<*, ArrayList<String>>
-                    Log.v("getAllCrawl",test.toString())
+                    //Log.v("getAllCrawl",test.toString())
                     //val crawllists = test?.toList()?.map { d -> Crawl(d) }
                     val list = mutableListOf<List<Crawl>>()
-                    Log.v("1",test.toString())
+                    //Log.v("1",test.toString())
                     if (test != null){ //Check if there is a Crawl
                         for (entry in test?.entries!!) {
-                            Log.v("2",test.toString())
+                            //Log.v("keeeeyyyys",test.keys.toString())
                             val array = entry.value
-                            Log.v("3",test.toString())
-                            list.add(array.toList().map { d -> Crawl(d) })
+                            //list.add(0, listOf(Crawl(entry.key as? String ?: "")))
+                            var temp = array.toList().map { d -> Crawl(d) }
+                            val tempp = Crawl(entry.key as? String ?: "")
+                            val newList = temp + tempp
+                            list.add(newList)
                         }
                     }
-                    Log.v("getAllCrawlpls",list.toList().toString())
+                    //Log.v("getAllCrawlpls",list.toList().toString())
                     continuation.resume(list.toList())
                 }.addOnFailureListener {
                     Log.v(TAG, "We failed $it")
