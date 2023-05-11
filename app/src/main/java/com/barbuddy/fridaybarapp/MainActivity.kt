@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
@@ -427,6 +428,6 @@ fun LinkButton(link: String){
         val intent = Intent(Intent.ACTION_VIEW, uri)
         context.startActivity(intent)
     }, colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))){
-        CustomText(data = "Facebook page", fontSize = 12, shadowcolor = Color(0xFFE70000))
+        Text(text = "Facebook page", style = TextStyle(fontSize = 12.sp))
     }
 }
