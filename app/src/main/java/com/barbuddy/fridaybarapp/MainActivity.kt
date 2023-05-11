@@ -241,6 +241,8 @@ fun Bars(bars: MutableList<JSONObject>) {
                         Icons.Filled.ArrowBack,
                         "contentDescription",
                         Modifier.clickable { viewDetails = !viewDetails })
+
+                    MapScreenDetails(DetailsName = currentBar.getString("name"))
                 } else {
                     //Burde ikke nå hertil, men bare for at være sikker
                     viewDetails = !viewDetails
