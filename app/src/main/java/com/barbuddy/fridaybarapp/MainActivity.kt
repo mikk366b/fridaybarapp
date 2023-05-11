@@ -1,5 +1,7 @@
 package com.barbuddy.fridaybarapp
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,38 +11,38 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import com.barbuddy.fridaybarapp.components.GetBars
 import com.barbuddy.fridaybarapp.components.authentication.SignupLogin
-import com.barbuddy.fridaybarapp.components.getCrawls
 import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.ui.theme.FridaybarappTheme
-import kotlinx.coroutines.Dispatchers
+import com.example.fridaybarapp.BarCrawlScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
-import com.barbuddy.fridaybarapp.R
-import com.barbuddy.fridaybarapp.BarCrawlScreen
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -235,12 +237,16 @@ fun Bars(bars: MutableList<JSONObject>) {
                             fontSize = 20,
                             Color(0xFFE70000)
                         )
+                        LinkButton(link = currentBar.getString("page"))
+
                     }
 
                     Icon(
                         Icons.Filled.ArrowBack,
                         "contentDescription",
                         Modifier.clickable { viewDetails = !viewDetails })
+
+                    MapScreenDetails(DetailsName = currentBar.getString("name"))
                 } else {
                     //Burde ikke nå hertil, men bare for at være sikker
                     viewDetails = !viewDetails
@@ -273,6 +279,9 @@ fun CustomText(data: String, fontSize: Int, shadowcolor: Color, modifier: Modifi
 @Composable
 fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
     var bars = remember { mutableListOf<JSONObject>() }
+    var fetchedNewData = remember {
+        mutableStateOf(false)
+    }
     LaunchedEffect(Unit) {
         val JSONbars = makeNetworkRequestJSON()
         if (JSONbars != null) {
@@ -280,6 +289,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 bars.add(JSONbars.getJSONObject(i))
             }
         }
+        fetchedNewData.value = true
     }
     var response by remember { mutableStateOf("") }
     // Declaring a boolean value to store
@@ -310,6 +320,11 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
         if (result != null) {
             response = result as String
         }
+    }
+
+    if(fetchedNewData.value)
+    {
+        // :)
     }
 
     // Display the response in a Text composable
@@ -394,16 +409,24 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 MapScreen()
             }
             if (mSelectedText == mScreens[3]){
-                BarCrawlScreen(response, service)
+                BarCrawlScreen()
             }
             if (mSelectedText == mScreens[4]){
                 GetBars(service)
             }
         }
+    }
+}
 
+@Composable
+fun LinkButton(link: String){
+    val context = LocalContext.current
+    Button(onClick = {
+        val uri: Uri = Uri.parse(link) // missing 'http://' will cause crashed
 
-
-
-
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        context.startActivity(intent)
+    }, colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))){
+        CustomText(data = "Facebook page", fontSize = 12, shadowcolor = Color(0xFFE70000))
     }
 }
