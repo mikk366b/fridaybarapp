@@ -15,10 +15,14 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
     companion object {
         const val TAG = "FIRE_STORE_SERVICE"
     }
+    internal var usere = User("null","null")
+    internal var loggedIn = false
 
-    //Not tested
     suspend fun getFarvoritesbars(): List<Bar>? {
         Log.v("getFarvoritesbars","karl")
+        if (!loggedIn){
+            return null
+        }
         return suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
                 .get()
@@ -32,7 +36,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
-
+    // Assumes that you are logged in
     suspend fun createFarvoritesbars(name: String) {
         val fridaybarToFav = hashMapOf(
             //"Name" to name
@@ -52,13 +56,12 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
-
+    // Assumes that you are logged in
     suspend fun deleteFarvoritesbars(name: String) {
         val fridaybarToFav = hashMapOf(
             //"Name" to name
             "favorites" to FieldValue.arrayRemove(name)
         )
-
         suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
                 .update(fridaybarToFav as Map<String, Any>)
@@ -75,6 +78,9 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
 
     suspend fun getACrawl(crawlId:String): List<Crawl>? {
         Log.v("getFarvoritesbars","karl")
+        if (!loggedIn){
+            return null
+        }
         return suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
                 .get()
@@ -93,6 +99,9 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
     }
     suspend fun getAllCrawl(): List<List<Crawl>>? {
         Log.v("getFarvoritesbars","karl")
+        if (!loggedIn){
+            return null
+        }
         return suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
                 .get()
@@ -102,11 +111,13 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                     //val crawllists = test?.toList()?.map { d -> Crawl(d) }
                     val list = mutableListOf<List<Crawl>>()
                     Log.v("1",test.toString())
-                    for (entry in test?.entries!!) {
-                        Log.v("2",test.toString())
-                        val array = entry.value
-                        Log.v("3",test.toString())
-                        list.add(array.toList().map { d -> Crawl(d) })
+                    if (test != null){ //Check if there is a Crawl
+                        for (entry in test?.entries!!) {
+                            Log.v("2",test.toString())
+                            val array = entry.value
+                            Log.v("3",test.toString())
+                            list.add(array.toList().map { d -> Crawl(d) })
+                        }
                     }
                     Log.v("getAllCrawlpls",list.toList().toString())
                     continuation.resume(list.toList())
@@ -116,6 +127,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
+    // Assumes that you are logged in
     suspend fun createCrawl(crawlId:String, name: String) {
         val data = hashMapOf(
             "crawls" to hashMapOf(
@@ -139,7 +151,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
-
+    // Assumes that you are logged in
     suspend fun deleteCrawl(crawlId:String, name: String) {
         suspendCoroutine { continuation ->
             api.collection("users").document(usere.id)
@@ -154,8 +166,7 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                 }
         }
     }
-    internal var usere = User("null","null")
-    internal var loggedIn = false
+
     suspend fun signup(email: String, password: String): String {
          return suspendCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
