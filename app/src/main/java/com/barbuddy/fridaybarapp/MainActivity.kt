@@ -3,6 +3,8 @@ package com.barbuddy.fridaybarapp
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
@@ -38,6 +40,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -93,10 +97,14 @@ fun makeNetworkRequesttest(): String? {
 }
 
 @Composable
-fun Bars(bars: MutableList<JSONObject>) {
+fun Bars(bars: MutableList<JSONObject>, db: FirebaseFirestore, service: FireStore) {
 
     var viewDetails by remember { mutableStateOf(false) }
     var lastClicked by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    val favoriteBars = remember { mutableStateOf(emptyList<String>()) }
+    val context = LocalContext.current
+
 
     if (!viewDetails) {
         Column(
@@ -171,10 +179,16 @@ fun Bars(bars: MutableList<JSONObject>) {
             //Text(text = response)
             //Log.v("JSON response før", response)
             //val parts = response.lines()
-
+            LaunchedEffect(Unit){
+                if (service.loggedIn){
+                    favoriteBars.value = service.getFarvoritesbars()!!.map { it.name }
+                }
+            }
             if (bars != null) {
                 for (i in 0 until bars.size) {
                     val bar = bars[i]
+                    val barName = bar.getString("name")
+                    val isFavorite = barName in favoriteBars.value
                     Spacer(modifier = Modifier.height(10.dp))
                     Card(
                         Modifier
@@ -189,6 +203,24 @@ fun Bars(bars: MutableList<JSONObject>) {
                         border = BorderStroke(2.dp, color = Color(0xFF000000)),
                         backgroundColor = Color(0xFF9B7D41)
                     ) {
+                        Row(Modifier.padding(3.dp)) {
+                            Column {
+                                CustomText(
+                                    data = bar.getString("name"),
+                                    fontSize = 25,
+                                    Color(0xFFE70000),
+                                    Modifier.offset(x = 5.dp)
+                                )
+                                CustomText(
+                                    data = bar.getString("address").substringBefore(", Denmark"),
+                                    fontSize = 20,
+                                    Color(0xFFE70000),
+                                    Modifier.offset(x = 5.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+
+                        }
                         Card(
                             Modifier.padding(4.dp),
                             shape = RoundedCornerShape(28),
@@ -196,12 +228,37 @@ fun Bars(bars: MutableList<JSONObject>) {
                             border = BorderStroke(0.dp, color = Color(0xFF9B7D41))
                         ) {
                             Column(Modifier.padding(3.dp)) {
-                                CustomText(
+                                Row(){CustomText(
                                     data = bar.getString("name"),
                                     fontSize = 25,
                                     Color(0xFFE70000),
                                     Modifier.offset(x = 5.dp)
                                 )
+                                    Icon(
+                                        if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                        contentDescription = "Favorite",
+                                        modifier = Modifier
+                                            .clickable {
+                                                if (service.loggedIn) {
+                                                    coroutineScope.launch {
+                                                        if (isFavorite) {
+                                                            service.deleteFarvoritesbars(barName)
+                                                        } else {
+                                                            service.createFarvoritesbars(barName)
+                                                        }
+                                                        if (service.loggedIn) {
+                                                            favoriteBars.value =
+                                                                service.getFarvoritesbars()!!
+                                                                    .map { it.name }
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    Toast.makeText(context, "You need to be logged in to use this feature",Toast.LENGTH_SHORT).show()}
+                                            }
+                                            .padding(8.dp),
+                                        tint = Color.Red
+                                    )}
                                 CustomText(
                                     data = bar.getString("address").substringBefore(", Denmark"),
                                     fontSize = 20,
@@ -404,7 +461,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 SignupLogin(service)
             }
             if (mSelectedText == mScreens[1]) {
-                Bars(bars)
+                Bars(bars, db, service)
             }
             if (mSelectedText == mScreens[2]){
                 MapScreen()

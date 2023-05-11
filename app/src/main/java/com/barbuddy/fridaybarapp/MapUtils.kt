@@ -552,6 +552,13 @@ fun MapScreenDetails(DetailsName:String) {
                                 val latLng = location
                                 val marker = geocodehelper.addMarker(map, latLng, name)
                                 markerLatLngMap[marker] = latLng
+                                map.setOnMapClickListener {
+                                    coroutineScope.launch {
+                                        currentRoute.value?.remove()
+                                        currentRoute.value = null
+                                        selectedMarkerState.value = null
+                                    }
+                                }
                                 map.setOnMarkerClickListener { clickedMarker ->
                                     if (selectedMarkerState.value == clickedMarker) {
                                         currentRoute.value?.remove()
@@ -607,13 +614,13 @@ fun MapScreenDetails(DetailsName:String) {
                             }
                         }
                     }
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Bar not found",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Bar not found",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
 
 
