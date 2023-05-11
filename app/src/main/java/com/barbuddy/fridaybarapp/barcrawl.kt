@@ -73,18 +73,19 @@ fun BarCrawlScreen(response: String, service: FireStore) {
             onClick = { if (!service.loggedIn) {
                 val message = "Please login to continue"
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                        }
+            }
+            else{
                 if( name.value != "") {
-                // Handle button click when user is logged in
-
-                scope.launch {
-                    //service.createCrawl(name.value,listOfBarCrawls)
-                    listOfBarCrawls.map { service.createCrawl(name.value,it) }
+                    // Handle button click when user is logged in
+                    scope.launch {
+                        //service.createCrawl(name.value,listOfBarCrawls)
+                        listOfBarCrawls.map { service.createCrawl(name.value,it) }
+                    }
+                } else {
+                    Toast.makeText(context, "Enter a name for this crawl", Toast.LENGTH_SHORT).show()
                 }
             }
-                      else{
-                    Toast.makeText(context, "Enter a list name for this crawl", Toast.LENGTH_SHORT).show()
-                      }},
+                      },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .weight(1f)
