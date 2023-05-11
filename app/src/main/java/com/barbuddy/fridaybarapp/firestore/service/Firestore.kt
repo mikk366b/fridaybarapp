@@ -102,11 +102,13 @@ class FireStore(private val api: FirebaseFirestore, private val auth: FirebaseAu
                     //val crawllists = test?.toList()?.map { d -> Crawl(d) }
                     val list = mutableListOf<List<Crawl>>()
                     Log.v("1",test.toString())
-                    for (entry in test?.entries!!) {
-                        Log.v("2",test.toString())
-                        val array = entry.value
-                        Log.v("3",test.toString())
-                        list.add(array.toList().map { d -> Crawl(d) })
+                    if (test != null){ //Check if there is a Crawl
+                        for (entry in test?.entries!!) {
+                            Log.v("2",test.toString())
+                            val array = entry.value
+                            Log.v("3",test.toString())
+                            list.add(array.toList().map { d -> Crawl(d) })
+                        }
                     }
                     Log.v("getAllCrawlpls",list.toList().toString())
                     continuation.resume(list.toList())
