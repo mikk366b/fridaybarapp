@@ -31,7 +31,7 @@ import com.barbuddy.fridaybarapp.components.GetBars
 import com.barbuddy.fridaybarapp.components.authentication.SignupLogin
 import com.barbuddy.fridaybarapp.firestore.service.FireStore
 import com.barbuddy.fridaybarapp.ui.theme.FridaybarappTheme
-import com.example.fridaybarapp.BarCrawlScreen
+import com.barbuddy.fridaybarapp.BarCrawlScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -409,7 +409,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 MapScreen()
             }
             if (mSelectedText == mScreens[3]){
-                BarCrawlScreen()
+                BarCrawlScreen(response, service)
             }
             if (mSelectedText == mScreens[4]){
                 GetBars(service)
