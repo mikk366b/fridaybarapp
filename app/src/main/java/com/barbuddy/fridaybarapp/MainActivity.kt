@@ -273,6 +273,9 @@ fun CustomText(data: String, fontSize: Int, shadowcolor: Color, modifier: Modifi
 @Composable
 fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
     var bars = remember { mutableListOf<JSONObject>() }
+    var fetchedNewData = remember {
+        mutableStateOf(false)
+    }
     LaunchedEffect(Unit) {
         val JSONbars = makeNetworkRequestJSON()
         if (JSONbars != null) {
@@ -280,6 +283,7 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
                 bars.add(JSONbars.getJSONObject(i))
             }
         }
+        fetchedNewData.value = true
     }
     var response by remember { mutableStateOf("") }
     // Declaring a boolean value to store
@@ -310,6 +314,11 @@ fun NetworkResponseUI(db: FirebaseFirestore, service: FireStore) {
         if (result != null) {
             response = result as String
         }
+    }
+
+    if(fetchedNewData.value)
+    {
+        // :)
     }
 
     // Display the response in a Text composable
