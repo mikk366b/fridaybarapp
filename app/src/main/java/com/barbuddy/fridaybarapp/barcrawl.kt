@@ -1,8 +1,12 @@
 package com.barbuddy.fridaybarapp
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -27,6 +31,9 @@ fun BarCrawlScreen(response: String, service: FireStore) {
     val context = LocalContext.current
     val bars = remember { mutableStateListOf<JSONObject>() }
     var listOfBarCrawls = remember {mutableListOf<String>()}
+    val crawls = remember { mutableStateOf(emptyList<List<Crawl>>()) }
+    var getClicked = remember{ mutableStateOf(false)}
+    var createClicked = remember{ mutableStateOf(false)}
 
     LaunchedEffect(Unit) {
         val JSONbars = makeNetworkRequestJSON()
@@ -35,6 +42,11 @@ fun BarCrawlScreen(response: String, service: FireStore) {
                 val bar = JSONbars.getJSONObject(i)
                 bars.add(bar)
             }
+        }
+        val list = service.getAllCrawl()
+        Log.v("Tests barcrawls get",list.toString())
+        if (list != null) {
+            crawls.value = list
         }
     }
 
@@ -47,6 +59,8 @@ fun BarCrawlScreen(response: String, service: FireStore) {
             for (bar in randomizedBars) {
                 listOfBarCrawls.add(bar.getString("name"))
             }
+            getClicked.value = false
+            createClicked.value = true
         },
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -59,7 +73,10 @@ fun BarCrawlScreen(response: String, service: FireStore) {
 
     Row(modifier = Modifier.fillMaxWidth()) {
         Button(
-            onClick = {scope.launch {service.getAllCrawl()}},
+            onClick = {
+                scope.launch{ crawls.value = service.getAllCrawl() ?: crawls.value } // ? : true : false
+                createClicked.value = false
+                getClicked.value = true },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .weight(1f)
@@ -101,11 +118,58 @@ fun BarCrawlScreen(response: String, service: FireStore) {
         TextField(value = name.value, onValueChange = { newText -> name.value = newText })
     }
     // printing bars in cards
-    if (randomizedBars.isNotEmpty()) {
+    if (randomizedBars.isNotEmpty() && createClicked.value) {
         for (bar in randomizedBars) {
             val name = bar.getString("name")
             val address = bar.getString("address")
-
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                Modifier
+                    .height(80.dp)
+                    .width(390.dp)
+                    .offset(x = 10.dp),
+                shape = RoundedCornerShape(20),
+                backgroundColor = Color(0xFF000000),
+                border = BorderStroke(2.dp, color = Color(0xFFA36D00))
+            ) {
+                Column(Modifier.padding(15.dp)) {
+                    CustomText(data = name, fontSize = 25, Color(0xFFE70000), )
+                    CustomText(data = address, fontSize = 15,Color(0xFFE70000),)
+                }
+            }
+        }
+    }
+    if(crawls != emptyList<List<Crawl>>() && getClicked.value){
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())) {
+            crawls.value.map {
+                Card(
+                    Modifier
+                        .height(80.dp)
+                        .width(390.dp)
+                        .offset(x = 10.dp),
+                    shape = RoundedCornerShape(20),
+                    backgroundColor = Color(0xFF000000),
+                    border = BorderStroke(2.dp, color = Color(0xFFA36D00))
+                ) {
+                    Column() {
+                        Log.v("listst",it.toString())
+                        it.map{
+                            Row(modifier = Modifier.background(color = Color.Cyan)) {
+                                Row() {
+                                    Text("Bar: ")
+                                    Text(it.name)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (bar in randomizedBars) {
+            val name = bar.getString("name")
+            val address = bar.getString("address")
             Spacer(modifier = Modifier.height(12.dp))
             Card(
                 Modifier
