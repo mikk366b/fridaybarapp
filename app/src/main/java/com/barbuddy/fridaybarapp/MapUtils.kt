@@ -1,7 +1,5 @@
 package com.barbuddy.fridaybarapp
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import android.Manifest
 import android.annotation.SuppressLint
 import android.location.Location
@@ -121,6 +119,7 @@ fun MapScreen() {
         }
     }
     val mapReadyState = remember { mutableStateOf(false) }
+    val routeUpdateNeeded = remember { mutableStateOf(false) }
     fun findClosestPoint(userLocation: LatLng, points: List<LatLng>): LatLng {
         var closestPoint = points[0]
         var smallestDistance = Float.MAX_VALUE
@@ -154,7 +153,7 @@ fun MapScreen() {
             currentLocationMarkerState.value?.position = latLng
         }
         val clickedMarker = selectedMarkerState.value
-        if (clickedMarker != null) {
+        if (clickedMarker != null && routeUpdateNeeded.value) {
             val destination = markerLatLngMap[clickedMarker]
             if (destination != null) {
                 currentRoute.value?.let { polyline ->
@@ -168,6 +167,7 @@ fun MapScreen() {
                     }
                 }
             }
+            routeUpdateNeeded.value = false
         }
     }
 
@@ -224,7 +224,6 @@ fun MapScreen() {
     val markerLatLngMap = remember { mutableMapOf<Marker, LatLng>() }
     val currentRoute = remember { mutableStateOf<Polyline?>(null) }
     val mapView = rememberMapViewWithLifecycle()
-    val routeMutex = remember { Mutex() }
 
     Scaffold {
         AndroidView({ mapView }) { mapView ->
@@ -233,10 +232,7 @@ fun MapScreen() {
                 map.uiSettings.isZoomControlsEnabled = true
                 val JSONbars = makeNetworkRequestJSON()
                 val bars = JSONbars
-                map.setOnMarkerClickListener { marker ->
-                    marker.showInfoWindow()
-                    true
-                }
+
                 if (bars != null) {
                     for (i in 0 until bars.length()) {
                         val bar = bars.getJSONObject(i)
@@ -248,30 +244,35 @@ fun MapScreen() {
                             val latLng = location
                             val marker = geocodehelper.addMarker(map, latLng, name)
                             markerLatLngMap[marker] = latLng
+                            map.setOnMapClickListener {
+                                coroutineScope.launch {
+                                    currentRoute.value?.remove()
+                                    currentRoute.value = null
+                                    selectedMarkerState.value = null
+                                }
+                            }
 
                             map.setOnMarkerClickListener { clickedMarker ->
-                                coroutineScope.launch {
-                                    routeMutex.withLock {
-                                        if (selectedMarkerState.value != clickedMarker) {
-                                            // Remove the existing route if there's one
-                                            currentRoute.value?.remove()
-                                            currentRoute.value = null
-                                            selectedMarkerState.value = clickedMarker
-                                        }
-
-                                        val destination = markerLatLngMap[clickedMarker]
-                                        if (destination != null) {
-                                            val origin = currentLocationState.value
-                                            if (origin != null) {
-                                                val originLatLng = LatLng(origin.latitude, origin.longitude)
+                                if (selectedMarkerState.value == clickedMarker) {
+                                    currentRoute.value?.remove()
+                                    currentRoute.value = null
+                                    selectedMarkerState.value = null
+                                } else {
+                                    currentRoute.value?.remove()
+                                    currentRoute.value = null
+                                    selectedMarkerState.value = clickedMarker
+                                    routeUpdateNeeded.value = true
+                                    val destination = markerLatLngMap[clickedMarker]
+                                    if (destination != null) {
+                                        val origin = currentLocationState.value
+                                        if (origin != null) {
+                                            val originLatLng = LatLng(origin.latitude, origin.longitude)
+                                            coroutineScope.launch {
                                                 val directionsResult = geocodehelper.getDirections(
                                                     originLatLng,
                                                     destination
                                                 )
                                                 if (directionsResult != null) {
-                                                    // Remove the existing route if there's one
-                                                    currentRoute.value?.remove()
-
                                                     val polylineOptions =
                                                         PolylineOptions().addAll(directionsResult)
                                                             .color(Color.BLUE)
@@ -284,20 +285,19 @@ fun MapScreen() {
                                                         Toast.LENGTH_SHORT
                                                     ).show()
                                                 }
-                                            } else {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Current location not available",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
                                             }
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Current location not available",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
-                                        clickedMarker.showInfoWindow()
                                     }
                                 }
+                                clickedMarker.showInfoWindow()
                                 return@setOnMarkerClickListener false
                             }
-                                }
 
 
 
@@ -306,6 +306,7 @@ fun MapScreen() {
                             }
                         }
                     }
+                }
 
                 // Request location permission and get the user's current location
 
@@ -338,18 +339,15 @@ fun MapScreen() {
                                                     val polylineOptions = PolylineOptions().addAll(directionsResult).color(Color.BLUE)
                                                     val polyline = map.addPolyline(polylineOptions)
                                                     currentRoute.value = polyline
-
                                                 } else {
                                                     Toast.makeText(context, "Failed to get directions", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
                                         }
                                     }
-                                    updateUserLocation(map, location, currentRoute, markerLatLngMap)
                                 }
                             }
                         }
-
                         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
 
                     } catch (e: Exception) {
