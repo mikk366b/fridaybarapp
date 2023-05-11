@@ -7,6 +7,35 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:312104559807:android:30df472b21a3e06b0c520a",
+        "android_client_info": {
+          "package_name": "com.barbuddy.fridaybarapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "312104559807-a235kdp8jet78m85p3l6m8ctrpb3utmp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzry76DRO-vyc4LrXAvsU1Ac8cxoTqCCU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "312104559807-a235kdp8jet78m85p3l6m8ctrpb3utmp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:312104559807:android:326afdb6dbd661700c520a",
         "android_client_info": {
           "package_name": "com.example.fridaybarapp"
