@@ -115,7 +115,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
 
     }
     Row(modifier = Modifier.fillMaxWidth()){
-        TextField(value = name.value, onValueChange = { newText -> name.value = newText })
+        TextField(value = name.value, onValueChange = { newText -> name.value = newText }, placeholder={ Text("Enter bar crawls epic name") })
     }
     // printing bars in cards
     if (randomizedBars.isNotEmpty() && createClicked.value) {

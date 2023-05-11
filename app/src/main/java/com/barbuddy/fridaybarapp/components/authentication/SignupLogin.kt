@@ -39,10 +39,11 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
                 unfocusedIndicatorColor = Color.Transparent,
                 cursorColor = Color.Black),
                 shape = RoundedCornerShape(16.dp),
-                value = email.value, onValueChange = { newText -> email.value = newText }, placeholder = { Text("Email") })
+                value = email.value, onValueChange = { newText -> email.value = newText }, placeholder = { Text("Email") },
+               modifier = Modifier.padding(12.dp))
 
 
-
+            
             TextField(colors = TextFieldDefaults.textFieldColors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
@@ -59,7 +60,8 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
                         )
                     }
                 }
-            , placeholder = { Text("Password") })
+            , placeholder = { Text("Password") },
+                modifier = Modifier.padding(12.dp))
         }
         Row(modifier = Modifier.fillMaxWidth()){
         Button(onClick = {
