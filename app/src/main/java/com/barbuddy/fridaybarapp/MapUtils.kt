@@ -97,7 +97,6 @@ enum class PermissionState {
     GRANTED, // Permission granted
     DENIED // Permission denied
 }
-//@OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun MapScreen() {
@@ -142,7 +141,7 @@ fun MapScreen() {
         return closestPoint
     }
 
-    // Define the updateUserLocation function here
+
     suspend fun updateUserLocation(map: GoogleMap, location: Location, currentRoute: MutableState<Polyline?>, markerLatLngMap: MutableMap<Marker, LatLng>) {
         val latLng = LatLng(location.latitude, location.longitude)
         currentLocationState.value = location
@@ -440,7 +439,6 @@ fun MapScreenDetails(DetailsName:String) {
         return closestPoint
     }
 
-    // Define the updateUserLocation function here
     fun updateUserLocation(map: GoogleMap, location: Location, currentRoute: MutableState<Polyline?>, markerLatLngMap: MutableMap<Marker, LatLng>) {
         val latLng = LatLng(location.latitude, location.longitude)
         currentLocationState.value = location
@@ -805,67 +803,5 @@ class GeocodeHelper(private val context: android.content.Context, private val ap
 
         return map.addMarker(markerOptions)
     }
-    suspend fun getRoute(origin: LatLng, destination: LatLng): Any? = withContext(Dispatchers.IO) {
-        try {
-            val result: DirectionsResult = DirectionsApi.newRequest(geoApiContext)
-                .mode(TravelMode.WALKING)
-                .origin(origin.latitude.toString() + "," + origin.longitude.toString())
-                .destination(destination.latitude.toString() + "," + destination.longitude.toString())
-                .await()
 
-            if (result.routes.isNotEmpty()) {
-                val route = result.routes[0]
-                val overviewPolyline = route.overviewPolyline
-                if (overviewPolyline != null) {
-                    val points = overviewPolyline.decodePath()
-                    val polyOptions = PolylineOptions()
-                    points.forEach {
-                        polyOptions.add(LatLng(it.lat, it.lng))
-                    }
-                    return@withContext polyOptions
-                }
-            }
-        } catch (e: ApiException) {
-            Log.e("GeocodeHelper", "Error getting directions: ${e.message}")
-        } catch (e: InterruptedException) {
-            Log.e("GeocodeHelper", "Error getting directions: ${e.message}")
-        } catch (e: IOException) {
-            Log.e("GeocodeHelper", "Error getting directions: ${e.message}")
-        }
-
-        return@withContext null
-    }
-    fun getGeoContext(): GeoApiContext {
-        val geoApiContext = GeoApiContext.Builder()
-            .apiKey(apiKey)
-            .build()
-        return geoApiContext
-    }
-    private val REQUEST_LOCATION_PERMISSION_CODE = 1001
-    fun getUserLocation(context: Context, callback: (LatLng?) -> Unit) {
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        val locationRequest = LocationRequest.create().apply {
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-
-        val permission = Manifest.permission.ACCESS_FINE_LOCATION
-
-        if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-            // Request permission
-            callback(null)
-            return
-        }
-
-        fusedLocationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult?.lastLocation?.let { location ->
-                    val latLng = LatLng(location.latitude, location.longitude)
-                    callback(latLng)
-                } ?: run {
-                    callback(null)
-                }
-                fusedLocationClient.removeLocationUpdates(this) // Remove the updates listener
-            }
-        }, null)
-    }
 }

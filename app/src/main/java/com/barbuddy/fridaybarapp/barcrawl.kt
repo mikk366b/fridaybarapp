@@ -169,7 +169,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
                     backgroundColor = Color(0xFF000000),
                     border = BorderStroke(2.dp, color = Color(0xFFA36D00))
                 ) {
-                    Column(Modifier.padding(10.dp)) {
+                    Column(Modifier.padding(25.dp)) {
                         //Log.v("listst",it.toString())
                         CustomText(data = it.last().name, fontSize = 25, Color(0xFFE70000), )
                         val temp = it.dropLast(1)
@@ -177,7 +177,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
                             Row() {
                                 //CustomText(data = it.name, fontSize = 25, Color(0xFFE70000), )
                                 Column(Modifier.padding(5.dp)) {
-                                    CustomText(data = it.name, fontSize = 15, Color(0xFFE70000), )
+                                    CustomText(data = it.name, fontSize = 20, Color(0xFFE70000), )
                             }
                             }
                         }
