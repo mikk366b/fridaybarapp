@@ -27,14 +27,9 @@ fun GetBars(service: FireStore) { //nav: NavController
             bars.value.map {
                 Card() {
                     Row() {
-                        Text("Name: ")
                         Text(it.name)
                     }
                 }
-            }
-            Button(onClick = { //nav.navigate("CreateBar")
-            }) {
-                Text("Create Horse")
             }
         }
     }
