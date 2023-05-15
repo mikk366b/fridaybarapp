@@ -100,6 +100,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
                         //service.createCrawl(name.value,listOfBarCrawls)
                         listOfBarCrawls.map { service.createCrawl(name.value,it) }
                     }
+                    Toast.makeText(context, "New bar crawl is saved", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, "Enter a name for this crawl", Toast.LENGTH_SHORT).show()
                 }
@@ -114,7 +115,6 @@ fun BarCrawlScreen(response: String, service: FireStore) {
         ) {
             Text(text = "Save bar crawl", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         }
-        //Text("Name of BarCrawl list:")
 
     }
     Spacer(modifier = Modifier.height(8.dp))
@@ -122,7 +122,7 @@ fun BarCrawlScreen(response: String, service: FireStore) {
         .fillMaxWidth()
         .padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically){
         TextField(value = name.value, onValueChange = { newText -> name.value = newText },
-            placeholder={ Text("Enter bar crawl name", fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
+            placeholder={ Text("Enter name for new bar crawl", fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.textFieldColors(
                 backgroundColor = Color(0x33FFFFFF),
