@@ -1,10 +1,8 @@
 package com.barbuddy.fridaybarapp.components.authentication
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -22,7 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SignupLogin(service: FireStore) { //, nav: NavController
@@ -35,16 +36,21 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
         Column() {
 
             TextField(colors = TextFieldDefaults.textFieldColors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                cursorColor = Color.Black),
+                    backgroundColor = Color(0x33FFFFFF),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black),
                 shape = RoundedCornerShape(16.dp),
-                value = email.value, onValueChange = { newText -> email.value = newText }, placeholder = { Text("Email") },
-               modifier = Modifier.padding(12.dp))
+                value = email.value, onValueChange = { newText -> email.value = newText },
+                placeholder = { Text("Email", fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
+                modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+            )
 
 
             
             TextField(colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color(0x33FFFFFF),
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 cursorColor = Color.Black),
@@ -59,9 +65,10 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
                             contentDescription = if (isPasswordVisible.value) "Hide password" else "Show password"
                         )
                     }
-                }
-            , placeholder = { Text("Password") },
-                modifier = Modifier.padding(12.dp))
+                },
+                placeholder = { Text("Password", fontSize = 18.sp, fontWeight = FontWeight.SemiBold) },
+                modifier = Modifier.padding(horizontal = 12.dp).fillMaxWidth(),
+                textStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold))
         }
         Row(modifier = Modifier.fillMaxWidth()){
         Button(onClick = {
@@ -73,11 +80,13 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
             }}
             else{Toast.makeText(context, "Error in email or password", Toast.LENGTH_SHORT).show()}
         }, shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color.Black),
             modifier = Modifier
                 .weight(1f)
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))) {
-            Text("Login")
+                .padding(12.dp)
+                .defaultMinSize(minWidth = 80.dp, minHeight = 30.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF0B432))) {
+            Text("Log in", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
         }
         Button(onClick = {
             if(email.value.isNotEmpty() &&  password.value.isNotEmpty()){
@@ -89,11 +98,13 @@ fun SignupLogin(service: FireStore) { //, nav: NavController
             else{Toast.makeText(context, "Error in email or password", Toast.LENGTH_SHORT).show()}
         },
             shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Color.Black),
             modifier = Modifier
                 .weight(1f)
-                .padding(16.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFD2DF05))) {
-            Text("Signup")
+                .padding(12.dp)
+                .defaultMinSize(minWidth = 80.dp, minHeight = 30.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFF0B432))) {
+            Text("Sign up", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
         }
         }
     }
